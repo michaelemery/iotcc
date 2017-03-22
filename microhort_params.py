@@ -13,6 +13,9 @@
 # micro-environment internal temperature
 temperature = 0.0
 
+# micro-environment barometric pressure
+pressure = 0.0
+
 # micro-environment internal temperature
 humidity = 0.0
 
