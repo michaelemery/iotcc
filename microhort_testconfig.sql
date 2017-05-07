@@ -80,12 +80,12 @@ CREATE TABLE datalog (
 
 -- populate tables with test configuration
 
-INSERT INTO owner
+INSERT INTO owner 
     (owner_email, owner_nickname)
 VALUES
-('michael.emery@icloud.com', 'Michael Emery'),
-('juddkw@gmail.com', 'Karl Judd'),
-('cliffordgwhiting@gmail.com', 'Cliff Whiting');
+    ('michael.emery@icloud.com', 'Michael Emery'),
+    ('juddkw@gmail.com', 'Karl Judd'),
+    ('cliffordgwhiting@gmail.com', 'Cliff Whiting');
 
 INSERT INTO hub
     (hub_mac, hub_name, hub_owner_id)
@@ -115,16 +115,20 @@ INSERT INTO hub_controller
     (hub_id, hub_gpio, controller_type_id)
 VALUES
     -- set gpio 18 to heater controller for Michael's hub
-    (SELECT owner.hub_id
-     FROM owner
+    (SELECT hub.hub_id
+     FROM hub
+     JOIN owner
+     ON (hub.owner_id = owner.owner_id)
      WHERE owner.owner_email = 'michael.emery@icloud.com',
      18,
      SELECT controller_type.controller_type_id 
      FROM controller_type
      WHERE controller_type_name = 'Heater'),
     -- set gpio 23 to mist spray controller for Michael's hub
-    (SELECT owner.hub_id
-     FROM owner
+    (SELECT hub.hub_id
+     FROM hub
+     JOIN owner
+     ON (hub.owner_id = owner.owner_id)
      WHERE owner.owner_email = 'michael.emery@icloud.com',
      23,
      SELECT controller_type.controller_type_id 
@@ -145,7 +149,7 @@ VALUES
      SELECT controller_type.controller_type_id 
      FROM controller_type
      WHERE controller_type.controller_type_name = 
-        'Cooling Fan',
+        'Cooling Fan'),
     ('Moisture',
      -- set mist spray as low moisture controller
      SELECT controller_type.controller_type_id 
@@ -159,16 +163,20 @@ INSERT INTO hub_sensor
     (hub_id, hub_gpio, sensor_type)
 VALUES
     -- set gpio 17 to temperature sensor for Michael's hub
-    (SELECT owner.hub_id
-     FROM owner
+    (SELECT hub.hub_id
+     FROM hub
+     JOIN owner
+     ON (hub.owner_id = owner.owner_id)
      WHERE owner.owner_email = 'michael.emery@icloud.com',
      17, 
      SELECT sensor_type.sensor_type_id 
      FROM sensor_type
      WHERE sensor_type_name = 'Temperature'),
     -- set gpio 27 to moisture sensor for Michael's hub
-    (SELECT owner.hub_id
-     FROM owner
+    (SELECT hub.hub_id
+     FROM hub
+     JOIN owner
+     ON (hub.owner_id = owner.owner_id)
      WHERE owner.owner_email = 'michael.emery@icloud.com',
      27, 
      SELECT sensor_type.sensor_type_id 
@@ -199,4 +207,3 @@ VALUES
      FROM sensor
      WHERE sensor.sensor_name = 'Temperature',
      5, 20, 26);  
-
