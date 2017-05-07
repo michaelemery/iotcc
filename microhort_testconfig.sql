@@ -114,7 +114,7 @@ VALUES
 INSERT INTO hub_controller
     (hub_id, hub_gpio, controller_type_id)
 VALUES
-    -- set gpio 18 to heater controller for Michael's hub
+    -- set gpio 18 to heater controller for Hub Emery
     (SELECT hub.hub_id
      FROM hub
      JOIN owner
@@ -124,7 +124,7 @@ VALUES
      SELECT controller_type.controller_type_id 
      FROM controller_type
      WHERE controller_type_name = 'Heater'),
-    -- set gpio 23 to mist spray controller for Michael's hub
+    -- set gpio 23 to mist spray controller for Hub Emery
     (SELECT hub.hub_id
      FROM hub
      JOIN owner
@@ -162,7 +162,7 @@ VALUES
 INSERT INTO hub_sensor
     (hub_id, hub_gpio, sensor_type)
 VALUES
-    -- set gpio 17 to temperature sensor for Michael's hub
+    -- set gpio 17 to temperature sensor for Hub Emery
     (SELECT hub.hub_id
      FROM hub
      JOIN owner
@@ -172,7 +172,7 @@ VALUES
      SELECT sensor_type.sensor_type_id 
      FROM sensor_type
      WHERE sensor_type_name = 'Temperature'),
-    -- set gpio 27 to moisture sensor for Michael's hub
+    -- set gpio 27 to moisture sensor for Hub Emery
     (SELECT hub.hub_id
      FROM hub
      JOIN owner
