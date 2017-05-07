@@ -3,8 +3,14 @@
 #
 # sense_thp.py
 #
+# Read sensor data from SenseHat sensor
+# (Raspberry Pi) and output to console.
+#
+#
 # Author: Michael Emery (12154337)
-#         158.335 Lab 3
+#         Massey University
+#
+# Copyright (c) 2017 Foofactory
 #
 # --------------------------------------
 
@@ -19,4 +25,3 @@ pressure = sense.get_pressure()
 print("Temperature : {}".format(temperature))
 print("Humidity    : {}".format(humidity))
 print("Pressure    : {}".format(pressure))
-
