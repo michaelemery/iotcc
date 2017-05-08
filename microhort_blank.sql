@@ -30,7 +30,7 @@ CREATE TABLE controller_type (
 
 CREATE TABLE hub_controller (
     hub_controller_id INT AUTO_INCREMENT PRIMARY KEY,
-    hub_id VARCHAR(18),
+    hub_id INT,
     hub_gpio INT,
     controller_type_id INT
 );
@@ -48,7 +48,7 @@ CREATE TABLE sensor_type (
 
 CREATE TABLE hub_sensor (
     hub_sensor_id INT AUTO_INCREMENT PRIMARY KEY,
-    hub_id VARCHAR(18),
+    hub_id INT,
     hub_gpio INT,
     sensor_type_id INT
 );
