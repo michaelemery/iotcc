@@ -40,10 +40,10 @@ CREATE TABLE sensor_type (
     sensor_type_name VARCHAR(40) UNIQUE,
     /* set controller type for correcting
        low sensor readings */
-    sensor_type_low_controller_id INT,
+    sensor_type_low_controller_type_id INT,
     /* set controller type for correcting
        high sensor readings */
-    sensor_type_high_controller_id INT
+    sensor_type_high_controller_type_id INT
 );
 
 CREATE TABLE hub_sensor (
