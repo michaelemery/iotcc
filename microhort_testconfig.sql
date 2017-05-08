@@ -98,6 +98,7 @@ INSERT INTO controller_type
     (controller_type_name, controller_type_max_run_time,
         controller_type_min_rest_time)
 VALUES
+    -- set controller names and limits (in seconds)
     ('Heater', '300', '120'),
     ('Cooling Fan', '900', '0'),
     ('Watering System', '5', '600');
