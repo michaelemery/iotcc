@@ -40,10 +40,10 @@ CREATE TABLE sensor_type (
     sensor_type_name VARCHAR(40) UNIQUE,
     /* set controller type for correcting
        low sensor readings */
-    sensor_type_low_controller_id INT,
+    sensor_type_low_controller_type_id INT,
     /* set controller type for correcting
        high sensor readings */
-    sensor_type_high_controller_id INT
+    sensor_type_high_controller_type_id INT
 );
 
 CREATE TABLE hub_sensor (
@@ -90,98 +90,56 @@ VALUES
 INSERT INTO hub
     (hub_mac, hub_name, hub_owner_id)
 VALUES
-    ('b8:27:eb:5f:70:90', 'Hub Emery', 
-     SELECT owner.owner_id 
-     FROM owner
-     WHERE owner.owner_email = 'michael.emery@icloud.com'),
-    ('b8:27:eb:5f:70:91', 'Hub Judd', 
-     SELECT owner.owner_id 
-     FROM owner
-     WHERE owner.owner_email = 'juddkw@gmail.com'),
-    ('b8:27:eb:5f:70:92', 'Hub Whiting', 
-     SELECT owner.owner_id 
-     FROM owner
-     WHERE owner.owner_email = 'cliffordgwhiting@gmail.com');
+    ('b8:27:eb:5f:70:90', 'Hub Emery', 1),
+    ('b8:27:eb:5f:70:91', 'Hub Judd', 2),
+    ('b8:27:eb:5f:70:92', 'Hub Whiting', 3);
 
 INSERT INTO controller_type
     (controller_type_name, controller_type_max_run_time,
         controller_type_min_rest_time)
 VALUES
-    ('Cooling Fan', '900', '0'),
     ('Heater', '300', '120'),
-    ('watering system', '5', '600');
+    ('Cooling Fan', '900', '0'),
+    ('Watering System', '5', '600');
 
 INSERT INTO hub_controller
     (hub_id, hub_gpio, controller_type_id)
 VALUES
-    -- set gpio 18 to heater controller for Hub Emery
-    (SELECT hub.hub_id
-     FROM hub
-     JOIN owner
-     ON (hub.owner_id = owner.owner_id)
-     WHERE owner.owner_email = 'michael.emery@icloud.com',
-     18,
-     SELECT controller_type.controller_type_id 
-     FROM controller_type
-     WHERE controller_type_name = 'Heater'),
-    -- set gpio 23 to mist spray controller for Hub Emery
-    (SELECT hub.hub_id
-     FROM hub
-     JOIN owner
-     ON (hub.owner_id = owner.owner_id)
-     WHERE owner.owner_email = 'michael.emery@icloud.com',
-     23,
-     SELECT controller_type.controller_type_id 
-     FROM controller_type
-     WHERE controller_type_name = 'Water Spray');
+    -- set gpio 18 to heater controller for all test hubs
+    (1, 18, 1),
+    (2, 18, 1),
+    (3, 18, 1),
+    -- set gpio 23 to cooling controller for all test hubs
+    (1, 23, 2),
+    (2, 23, 2),
+    (3, 23, 2),
+    -- set gpio 24 to water controller for all test hubs
+    (1, 24, 3),
+    (2, 24, 3),
+    (3, 24, 3);
 
 INSERT INTO sensor_type
-    (sensor_type_name, sensor_type_low_controller_id, 
+    (sensor_type_name, sensor_type_low_controller_type_id, 
         sensor_type_high_controller_type_id)
 VALUES
-    ('Temperature',
-     -- set heater as low temperature controller 
-     SELECT controller_type.controller_type_id 
-     FROM controller_type
-     WHERE controller_type.controller_type_name = 
-        'Heater',
-     -- set cooling fan as temperature controller
-     SELECT controller_type.controller_type_id 
-     FROM controller_type
-     WHERE controller_type.controller_type_name = 
-        'Cooling Fan'),
-    ('Moisture',
-     -- set mist spray as low moisture controller
-     SELECT controller_type.controller_type_id 
-     FROM controller_type
-     WHERE controller_type.controller_type_name = 
-        'Water Spray',
-     -- there is no high moisture controller 
-     NULL);
+    -- set heater as low temperature controller and
+    -- fan as high temperature controller for all test hubs
+    ('Temperature', 1, 2),
+    -- set watering system as low moisture controller for all
+    -- test hubs, there is no (NULL) high moisture controller
+    ('Moisture', 3, NULL);
 
 INSERT INTO hub_sensor
-    (hub_id, hub_gpio, sensor_type)
+    (hub_id, hub_gpio, sensor_type_id)
 VALUES
-    -- set gpio 17 to temperature sensor for Hub Emery
-    (SELECT hub.hub_id
-     FROM hub
-     JOIN owner
-     ON (hub.owner_id = owner.owner_id)
-     WHERE owner.owner_email = 'michael.emery@icloud.com',
-     17, 
-     SELECT sensor_type.sensor_type_id 
-     FROM sensor_type
-     WHERE sensor_type_name = 'Temperature'),
-    -- set gpio 27 to moisture sensor for Hub Emery
-    (SELECT hub.hub_id
-     FROM hub
-     JOIN owner
-     ON (hub.owner_id = owner.owner_id)
-     WHERE owner.owner_email = 'michael.emery@icloud.com',
-     27, 
-     SELECT sensor_type.sensor_type_id 
-     FROM sensor_type
-     WHERE sensor_type_name = 'Moisture');
+    -- set gpio 17 to temperature sensor for all test hubs
+    (1, 17, 1),
+    (2, 17, 1),
+    (3, 17, 1),
+    -- set gpio 27 to moisture sensor for all test hubs
+    (1, 27, 2),
+    (2, 27, 2),
+    (3, 27, 2);
 
 INSERT INTO environment
     (environment_name)
@@ -193,17 +151,7 @@ INSERT INTO environment_sensor
     (environment_id, sensor_id, sensor_low, sensor_optimal,
         sensor_high)
 VALUES
-    (SELECT environment_id
-     FROM environment.environment_id
-     WHERE environment_name = 'Desert Cacti',
-     SELECT sensor.sensor_id
-     FROM sensor
-     WHERE sensor.sensor_name = 'Temperature',
-     2, 22, 30),
-    (SELECT environment_id
-     FROM environment.environment_id
-     WHERE environment_name = 'Temperate Ferns',
-     SELECT sensor.sensor_id
-     FROM sensor
-     WHERE sensor.sensor_name = 'Temperature',
-     5, 20, 26);  
+    -- set Desert Cacti temperature range to (2, 22, 30)
+    (1, 1, 2, 22, 30),
+    -- set Temperate Ferns temperature range to (5, 20, 26)
+    (2, 1, 5, 20, 26);
