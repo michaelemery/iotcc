@@ -70,7 +70,7 @@ CREATE TABLE environment_sensor (
 CREATE TABLE datalog (
     datalog_id INT AUTO_INCREMENT PRIMARY KEY,
     dtg TIMESTAMP,
-    hub_mac VARCHAR(18), 
+    hub_id INT, 
     environment_id INT,
     sensor_type_id INT,
     mean_sensor_value INT,
