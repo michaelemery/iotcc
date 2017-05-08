@@ -154,4 +154,8 @@ VALUES
     -- set Desert Cacti temperature range to (2, 22, 30)
     (1, 1, 2, 22, 30),
     -- set Temperate Ferns temperature range to (5, 20, 26)
-    (2, 1, 5, 20, 26);
+    (2, 1, 5, 20, 26),
+        -- set Desert Cacti moisture range to (0, 5, NULL)
+    (1, 1, 2, 10, NULL),
+    -- set Temperate Ferns moisture range to (3, 10, NULL)
+    (2, 1, 8, 15, NULL);
