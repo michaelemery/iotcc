@@ -1,4 +1,4 @@
-DROP DATABASE microhort;
+DROP DATABASE IF EXISTS microhort;
 
 CREATE DATABASE microhort;
 
