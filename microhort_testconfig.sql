@@ -7,7 +7,7 @@ USE microhort;
 CREATE TABLE owner (
     owner_id INT AUTO_INCREMENT PRIMARY KEY,
     owner_email VARCHAR(128) UNIQUE,
-    owner_nickname VARCHAR(40)
+    owner_name VARCHAR(40)
 );
 
 CREATE TABLE hub (
@@ -81,7 +81,7 @@ CREATE TABLE datalog (
 -- populate tables with test configuration
 
 INSERT INTO owner 
-    (owner_email, owner_nickname)
+    (owner_email, owner_name)
 VALUES
     ('michael.emery@icloud.com', 'Michael Emery'),
     ('juddkw@gmail.com', 'Karl Judd'),
