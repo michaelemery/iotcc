@@ -7,7 +7,7 @@ USE microhort;
 CREATE TABLE owner (
     owner_id INT AUTO_INCREMENT PRIMARY KEY,
     owner_email VARCHAR(128) UNIQUE,
-    owner_nickname VARCHAR(40)
+    owner_name VARCHAR(40)
 );
 
 CREATE TABLE hub (
@@ -20,10 +20,10 @@ CREATE TABLE hub (
 CREATE TABLE controller_type (
     controller_type_id INT AUTO_INCREMENT PRIMARY KEY,
     controller_type_name VARCHAR(40) UNIQUE,
-    /* set controller maximum safe running time 
+    /* set controller maximum safe running time
        (in seconds) before it must be turned off */
     controller_type_max_run_time INT,
-    /* set controller minimum resting time 
+    /* set controller minimum resting time
        (in seconds) before it can safely restart */
     controller_type_min_rest_time INT
 );
@@ -70,7 +70,7 @@ CREATE TABLE environment_sensor (
 CREATE TABLE datalog (
     datalog_id INT AUTO_INCREMENT PRIMARY KEY,
     dtg TIMESTAMP,
-    hub_id INT, 
+    hub_id INT,
     environment_id INT,
     sensor_type_id INT,
     mean_sensor_value INT,
