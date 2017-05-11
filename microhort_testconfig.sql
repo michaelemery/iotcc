@@ -149,7 +149,7 @@ VALUES
     ('Temperate Ferns');
 
 INSERT INTO environment_sensor
-    (environment_id, sensor_id, sensor_low, sensor_optimal,
+    (environment_id, sensor_type_id, sensor_low, sensor_optimal,
         sensor_high)
 VALUES
     -- set Desert Cacti temperature range to (2, 22, 30)
