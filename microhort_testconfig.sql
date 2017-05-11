@@ -134,12 +134,12 @@ INSERT INTO hub_sensor
     (hub_id, hub_gpio, sensor_type_id)
 VALUES
     -- set gpio 17 to temperature sensor for all test hubs
+    -- and gpio 27 to moisture sensor for all test hubs
     (1, 17, 1),
-    (2, 17, 1),
-    (3, 17, 1),
-    -- set gpio 27 to moisture sensor for all test hubs
     (1, 27, 2),
+    (2, 17, 1),
     (2, 27, 2),
+    (3, 17, 1),
     (3, 27, 2);
 
 INSERT INTO environment
