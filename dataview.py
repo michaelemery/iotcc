@@ -73,10 +73,10 @@ def view_environment_sensor():
     query = ("SELECT environment_sensor.environment_sensor_id, environment_name, sensor_type_name, sensor_low, sensor_optimal, sensor_high "
              "FROM environment_sensor "
              "JOIN environment ON environment_sensor.environment_id=environment.environment_id "
-             "JOIN sensor_type ON environment_sensor.sensor_id=sensor_type.sensor_type_id")
+             "JOIN sensor_type ON environment_sensor.sensor_type_id=sensor_type.sensor_type_id")
     cursor.execute(query)
     for (environment_sensor_id, environment_name, sensor_type_name, sensor_low, sensor_optimal, sensor_high) in cursor:
-        print("{0:6d} {1:20} {2:10} {3:6} {4:6} {5:6}".format(environment_sensor_id, environment_name, sensor_type_name, sensor_low, sensor_optimal, sensor_high))
+        print("{0:6d} {1:20} {2:12} {3:6} {4:6} {5:6}".format(environment_sensor_id, environment_name, sensor_type_name, sensor_low, sensor_optimal, sensor_high))
 
 
 def view_sensor_type():
