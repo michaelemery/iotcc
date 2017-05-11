@@ -61,7 +61,7 @@ CREATE TABLE environment (
 CREATE TABLE environment_sensor (
     environment_sensor_id INT AUTO_INCREMENT PRIMARY KEY,
     environment_id INT,
-    sensor_id INT,
+    sensor_type_id INT,
     sensor_low INT,
     sensor_optimal INT,
     sensor_high INT
@@ -157,6 +157,6 @@ VALUES
     -- set Temperate Ferns temperature range to (5, 20, 26)
     (2, 1, 5, 20, 26),
         -- set Desert Cacti moisture range to (0, 5, NULL)
-    (1, 1, 2, 10, NULL),
+    (1, 2, 2, 10, NULL),
     -- set Temperate Ferns moisture range to (3, 10, NULL)
-    (2, 1, 8, 15, NULL);
+    (2, 2, 8, 15, NULL);

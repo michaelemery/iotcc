@@ -61,7 +61,7 @@ CREATE TABLE environment (
 CREATE TABLE environment_sensor (
     environment_sensor_id INT AUTO_INCREMENT PRIMARY KEY,
     environment_id INT,
-    sensor_id INT,
+    sensor_type_id INT,
     sensor_low INT,
     sensor_optimal INT,
     sensor_high INT
