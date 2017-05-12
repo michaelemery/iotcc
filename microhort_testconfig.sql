@@ -83,9 +83,9 @@ CREATE TABLE datalog (
 INSERT INTO owner 
     (owner_email, owner_name)
 VALUES
-    ('michael.emery@icloud.com', 'Michael Emery'),
-    ('juddkw@gmail.com', 'Karl Judd'),
-    ('cliffordgwhiting@gmail.com', 'Cliff Whiting');
+    ('xyzfoomichael.emery@icloud.com', 'Michael Emery'),
+    ('xyzfoojuddkw@gmail.com', 'Karl Judd'),
+    ('xyzfoocliffordgwhiting@gmail.com', 'Cliff Whiting');
 
 INSERT INTO hub
     (hub_mac, hub_name, hub_owner_id)

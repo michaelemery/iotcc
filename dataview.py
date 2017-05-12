@@ -6,7 +6,7 @@
 # Creative Design Project 2017
 # Microhort (Group 8)
 #
-# microhort.py
+# dataview.py
 #  Central control module for micro-
 #  horticulture project. Generates
 #  events based on sensor readings.
