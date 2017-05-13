@@ -53,14 +53,14 @@ CREATE TABLE hub_sensor (
     sensor_type_id INT
 );
 
-CREATE TABLE environment (
-    environment_id INT AUTO_INCREMENT PRIMARY KEY,
-    environment_name VARCHAR(40) UNIQUE
+CREATE TABLE profile (
+    profile_id INT AUTO_INCREMENT PRIMARY KEY,
+    profile_name VARCHAR(40) UNIQUE
 );
 
-CREATE TABLE environment_sensor (
-    environment_sensor_id INT AUTO_INCREMENT PRIMARY KEY,
-    environment_id INT,
+CREATE TABLE profile_sensor (
+    profile_sensor_id INT AUTO_INCREMENT PRIMARY KEY,
+    profile_id INT,
     sensor_type_id INT,
     sensor_low INT,
     sensor_optimal INT,
@@ -90,7 +90,7 @@ VALUES
 INSERT INTO hub
     (hub_mac, hub_name, hub_owner_id)
 VALUES
-    ('b8:27:eb:5f:70:90', 'Hub Emery', 1),
+    ('b8:27:eb:0a:25:c5', 'Hub Emery', 1),
     ('b8:27:eb:5f:70:91', 'Hub Judd', 2),
     ('b8:27:eb:5f:70:92', 'Hub Whiting', 3);
 
