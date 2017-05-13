@@ -71,7 +71,7 @@ CREATE TABLE datalog (
     datalog_id INT AUTO_INCREMENT PRIMARY KEY,
     dtg TIMESTAMP,
     hub_id INT, 
-    environment_id INT,
+    profile_id INT,
     sensor_type_id INT,
     mean_sensor_value INT,
     controller_type_id INT,
@@ -142,14 +142,14 @@ VALUES
     (3, 17, 1),
     (3, 27, 2);
 
-INSERT INTO environment
-    (environment_name)
+INSERT INTO profile
+    (profile_name)
 VALUES
     ('Desert Cacti'),
     ('Temperate Ferns');
 
-INSERT INTO environment_sensor
-    (environment_id, sensor_type_id, sensor_low, sensor_optimal,
+INSERT INTO profile_sensor
+    (profile_id, sensor_type_id, sensor_low, sensor_optimal,
         sensor_high)
 VALUES
     -- set Desert Cacti temperature range to (2, 22, 30)
