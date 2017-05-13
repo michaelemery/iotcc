@@ -14,6 +14,7 @@ CREATE TABLE hub (
     hub_id INT AUTO_INCREMENT PRIMARY KEY,
     hub_mac VARCHAR(40) UNIQUE,
     hub_name VARCHAR(40),
+    hub_profile_id INT,
     hub_owner_id INT
 );
 
@@ -31,7 +32,7 @@ CREATE TABLE controller_type (
 CREATE TABLE hub_controller (
     hub_controller_id INT AUTO_INCREMENT PRIMARY KEY,
     hub_id INT,
-    hub_gpio INT,
+    gpio INT,
     controller_type_id INT
 );
 
@@ -49,7 +50,7 @@ CREATE TABLE sensor_type (
 CREATE TABLE hub_sensor (
     hub_sensor_id INT AUTO_INCREMENT PRIMARY KEY,
     hub_id INT,
-    hub_gpio INT,
+    gpio INT,
     sensor_type_id INT
 );
 
@@ -83,16 +84,16 @@ CREATE TABLE datalog (
 INSERT INTO owner 
     (owner_email, owner_name)
 VALUES
-    ('xyzfoomichael.emery@icloud.com', 'Michael Emery'),
-    ('xyzfoojuddkw@gmail.com', 'Karl Judd'),
-    ('xyzfoocliffordgwhiting@gmail.com', 'Cliff Whiting');
+    ('michael.foo@icloud.com', 'Michael Emery'),
+    ('fookw@gmail.com', 'Karl Judd'),
+    ('cliffordgfoo@gmail.com', 'Cliff Whiting');
 
 INSERT INTO hub
-    (hub_mac, hub_name, hub_owner_id)
+    (hub_mac, hub_name, hub_profile_id, hub_owner_id)
 VALUES
-    ('b8:27:eb:0a:25:c5', 'Hub Emery', 1),
-    ('b8:27:eb:5f:70:91', 'Hub Judd', 2),
-    ('b8:27:eb:5f:70:92', 'Hub Whiting', 3);
+    ('b8:27:eb:0a:25:c5', 'Hub Emery', 1, 1),
+    ('b8:27:eb:5f:70:91', 'Hub Judd', 2, 2),
+    ('b8:27:eb:5f:70:92', 'Hub Whiting', 3, 3);
 
 INSERT INTO controller_type
     (controller_type_name, controller_type_max_run_time,
@@ -104,20 +105,17 @@ VALUES
     ('Watering System', '5', '600');
 
 INSERT INTO hub_controller
-    (hub_id, hub_gpio, controller_type_id)
+    (hub_id, gpio, controller_type_id)
 VALUES
-    -- set gpio 18 to heater controller for all test hubs
-    (1, 18, 1),
-    (2, 18, 1),
-    (3, 18, 1),
-    -- set gpio 23 to cooling controller for all test hubs
-    (1, 23, 2),
-    (2, 23, 2),
-    (3, 23, 2),
-    -- set gpio 24 to water controller for all test hubs
-    (1, 24, 3),
-    (2, 24, 3),
-    (3, 24, 3);
+    (1, 18, 1),  -- emery    18 = heater
+    (1, 23, 2),  -- emery    23 = cooling fan
+    (1, 24, 3),  -- emery    24 = watering system
+    (2, 18, 1),  -- judd     25 = heater
+    (2, 23, 2),  -- judd     12 = cooling fan
+    (2, 24, 3),  -- judd     16 = watering system
+    (3, 18, 1),  -- whiting  20 = heater
+    (3, 23, 2),  -- whiting  21 = cooling fan
+    (3, 24, 3);  -- whiting  26 = watering system
 
 INSERT INTO sensor_type
     (sensor_type_name, sensor_type_low_controller_type_id, 
@@ -131,22 +129,21 @@ VALUES
     ('Moisture', 3, NULL);
 
 INSERT INTO hub_sensor
-    (hub_id, hub_gpio, sensor_type_id)
+    (hub_id, gpio, sensor_type_id)
 VALUES
-    -- set gpio 17 to temperature sensor for all test hubs
-    -- and gpio 27 to moisture sensor for all test hubs
-    (1, 17, 1),
-    (1, 27, 2),
-    (2, 17, 1),
-    (2, 27, 2),
-    (3, 17, 1),
-    (3, 27, 2);
+    (1, 17, 1),  -- emery   17 = temperature
+    (1, 27, 2),  -- emery   27 = moisture
+    (2,  5, 1),  -- judd     5 = temperature
+    (2,  6, 2),  -- judd     6 = moisture
+    (3, 13, 1),  -- whiting 13 = temperature
+    (3, 19, 2);  -- whiting 19 = moisture
 
 INSERT INTO profile
     (profile_name)
 VALUES
+    ('Temperate Herb'),
     ('Desert Cacti'),
-    ('Temperate Ferns');
+    ('Tropical Fern');
 
 INSERT INTO profile_sensor
     (profile_id, sensor_type_id, sensor_low, sensor_optimal,
