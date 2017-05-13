@@ -1,22 +1,21 @@
 #!/usr/bin/env python
 # --------------------------------------
 #
-# Massey University
-# 158.335
-# Creative Design Project 2017
-# Microhort (Group 8)
-#
 # microhort.py
 #  Central control module for micro-
 #  horticulture project. Generates
 #  events based on sensor readings.
+#
+# Massey University
+# 158.335
+# Creative Design Project 2017
+# Microhort (Group 8)
 #
 # Authors:  Michael Emery,
 #           Karl Judd,
 #           Cliff Whiting.
 #
 # --------------------------------------
-
 
 import mysql.connector
 
