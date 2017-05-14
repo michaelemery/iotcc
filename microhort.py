@@ -44,7 +44,6 @@ def main():
     while True:
         previous_sensor_state = sensor_state
         sensor_state = evaluate_state(previous_sensor_state)
-        print(sensor_state)
         exit()
 
 
