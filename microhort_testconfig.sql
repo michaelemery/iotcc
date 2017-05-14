@@ -93,7 +93,7 @@ INSERT INTO hub
 VALUES
     ('b8:27:eb:0a:25:c5', 'Hub Emery', 1, 1),
     ('b8:27:eb:5f:70:91', 'Hub Judd', 2, 2),
-    ('b8:27:eb:5f:70:92', 'Hub Whiting', 3, 3);
+    ('b8:27:eb:bc:4d:a4', 'Hub Whiting', 3, 3);
 
 INSERT INTO controller_type
     (controller_type_name, controller_type_max_run_time,
