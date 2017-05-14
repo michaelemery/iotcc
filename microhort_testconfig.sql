@@ -29,10 +29,10 @@ CREATE TABLE controller_type (
     controller_type_min_rest_time INT
 );
 
-CREATE TABLE hub_controller (
-    hub_controller_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE controller (
+    controller_id INT AUTO_INCREMENT PRIMARY KEY,
     hub_id INT,
-    gpio INT,
+    controller_gpio INT,
     controller_type_id INT
 );
 
@@ -47,10 +47,10 @@ CREATE TABLE sensor_type (
     sensor_type_high_controller_type_id INT
 );
 
-CREATE TABLE hub_sensor (
-    hub_sensor_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE sensor (
+    sensor_id INT AUTO_INCREMENT PRIMARY KEY,
     hub_id INT,
-    gpio INT,
+    sensor_gpio INT,
     sensor_type_id INT
 );
 
@@ -63,9 +63,9 @@ CREATE TABLE profile_sensor (
     profile_sensor_id INT AUTO_INCREMENT PRIMARY KEY,
     profile_id INT,
     sensor_type_id INT,
-    sensor_low INT,
-    sensor_optimal INT,
-    sensor_high INT
+    profile_sensor_low INT,
+    profile_sensor_optimal INT,
+    profile_sensor_high INT
 );
 
 CREATE TABLE datalog (
@@ -92,7 +92,7 @@ INSERT INTO hub
     (hub_mac, hub_name, hub_profile_id, hub_owner_id)
 VALUES
     ('b8:27:eb:0a:25:c5', 'Hub Emery', 1, 1),
-    ('b8:27:eb:5f:70:91', 'Hub Judd', 2, 2),
+    ('b8:27:eb:08:05:94', 'Hub Judd', 2, 2),
     ('b8:27:eb:bc:4d:a4', 'Hub Whiting', 3, 3);
 
 INSERT INTO controller_type
@@ -104,8 +104,8 @@ VALUES
     ('Cooling Fan', '900', '0'),
     ('Watering System', '5', '600');
 
-INSERT INTO hub_controller
-    (hub_id, gpio, controller_type_id)
+INSERT INTO controller
+    (hub_id, controller_gpio, controller_type_id)
 VALUES
     (1, 18, 1),  -- emery    18 = heater
     (1, 23, 2),  -- emery    23 = cooling fan
@@ -128,8 +128,8 @@ VALUES
     -- test hubs, there is no (NULL) high moisture controller
     ('Moisture', 3, NULL);
 
-INSERT INTO hub_sensor
-    (hub_id, gpio, sensor_type_id)
+INSERT INTO sensor
+    (hub_id, sensor_gpio, sensor_type_id)
 VALUES
     (1, 17, 1),  -- emery   17 = temperature
     (1, 27, 2),  -- emery   27 = moisture
@@ -146,14 +146,18 @@ VALUES
     ('Tropical Fern');
 
 INSERT INTO profile_sensor
-    (profile_id, sensor_type_id, sensor_low, sensor_optimal,
-        sensor_high)
+    (profile_id, sensor_type_id, profile_sensor_low, profile_sensor_optimal,
+        profile_sensor_high)
 VALUES
-    -- set Desert Cacti temperature range to (2, 22, 30)
+    -- set Temperate Herb temperature range to (2, 22, 30)
     (1, 1, 2, 22, 30),
-    -- set Desert Cacti moisture range to (0, 5, NULL)
+    -- set Temperate Herb moisture range to (2, 10, NULL)
     (1, 2, 2, 10, NULL),
-    -- set Temperate Ferns temperature range to (5, 20, 26)
+    -- set Desert Cacti temperature range to (5, 20, 26)
     (2, 1, 5, 20, 26),
-    -- set Temperate Ferns moisture range to (3, 10, NULL)
-    (2, 2, 8, 15, NULL);
+    -- set Desert Cacti moisture range to (8, 15, NULL)
+    (2, 2, 8, 15, NULL),
+    -- set Tropical Fern temperature range to (12, 28, 36)
+    (3, 1, 12, 28, 36),
+    -- set Tropical Fern moisture range to (17, 35, NULL)
+    (3, 2, 17, 35, NULL);

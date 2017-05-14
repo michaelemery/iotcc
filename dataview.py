@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # --------------------------------------
 #
-# Massey University
-# 158.335
-# Creative Design Project 2017
-# Microhort (Group 8)
-#
 # dataview.py
 #  Central control module for micro-
 #  horticulture project. Generates
 #  events based on sensor readings.
+#
+# Massey University
+# 158.335
+# Creative Design Project 2017
+# Microhort (Group 8)
 #
 # Authors:  Michael Emery,
 #           Karl Judd,
@@ -32,11 +32,11 @@ def main():
     view_owner()
     view_hub()
     view_controller_type()
-    view_hub_controller()
+    view_controller()
     view_sensor_type()
-    view_hub_sensor()
-    view_environment()
-    view_environment_sensor()
+    view_sensor()
+    view_profile()
+    view_profile_sensor()
     print("")
     cursor.close()
     cnx.close()
@@ -72,19 +72,19 @@ def view_controller_type():
                                                     controller_type_max_run_time, controller_type_min_rest_time))
 
 
-def view_hub_controller():
-    heading("Hub Controller")
-    query = ("SELECT hub_controller_id, hub_name, hub_gpio, controller_type_name "
-             "FROM hub_controller "
-             "JOIN hub ON hub_controller.hub_id=hub.hub_id "
-             "JOIN controller_type ON hub_controller.controller_type_id=controller_type.controller_type_id")
+def view_controller():
+    heading("Controller")
+    query = ("SELECT controller_id, hub_name, controller_gpio, controller_type_name "
+             "FROM controller "
+             "JOIN hub ON controller.hub_id=hub.hub_id "
+             "JOIN controller_type ON controller.controller_type_id=controller_type.controller_type_id")
     cursor.execute(query)
-    for (hub_controller_id, hub_name, hub_gpio, controller_type_name) in cursor:
-        print("{0:6d} {1:20} {2:6} {3:20}".format(hub_controller_id, hub_name, hub_gpio, controller_type_name))
+    for (controller_id, hub_name, controller_gpio, controller_type_name) in cursor:
+        print("{0:6d} {1:20} {2:6} {3:20}".format(controller_id, hub_name, controller_gpio, controller_type_name))
 
 
 def view_sensor_type():
-    heading("Sensors")
+    heading("Sensor Type")
     query = ("SELECT sensor_type_id, sensor_type_name "
              "FROM sensor_type")
     cursor.execute(query)
@@ -92,37 +92,37 @@ def view_sensor_type():
         print("{0:6d} {1:20}".format(sensor_type_id, sensor_type_name))
 
 
-def view_hub_sensor():
-    heading("Hub Sensor")
-    query = ("SELECT hub_sensor_id, hub_name, hub_gpio, sensor_type_name "
-             "FROM hub_sensor "
-             "JOIN hub ON hub_sensor.hub_id=hub.hub_id "
-             "JOIN sensor_type ON hub_sensor.sensor_type_id=sensor_type.sensor_type_id")
+def view_sensor():
+    heading("Sensor")
+    query = ("SELECT sensor_id, hub_name, sensor_gpio, sensor_type_name "
+             "FROM sensor "
+             "JOIN hub ON sensor.hub_id=hub.hub_id "
+             "JOIN sensor_type ON sensor.sensor_type_id=sensor_type.sensor_type_id")
     cursor.execute(query)
-    for (hub_controller_id, hub_name, hub_gpio, sensor_type_name) in cursor:
-        print("{0:6d} {1:20} {2:6} {3:20}".format(hub_controller_id, hub_name, hub_gpio, sensor_type_name))
+    for (sensor_id, hub_name, sensor_gpio, sensor_type_name) in cursor:
+        print("{0:6d} {1:20} {2:6} {3:20}".format(sensor_id, hub_name, sensor_gpio, sensor_type_name))
 
 
-def view_environment():
-    heading("Environment")
-    query = ("SELECT environment_id, environment_name "
-             "FROM environment")
+def view_profile():
+    heading("Profile")
+    query = ("SELECT profile_id, profile_name "
+             "FROM profile")
     cursor.execute(query)
-    for (environment_id, environment_name) in cursor:
-        print("{0:6d} {1:20}".format(environment_id, environment_name))
+    for (profile_id, profile_name) in cursor:
+        print("{0:6d} {1:20}".format(profile_id, profile_name))
 
 
-def view_environment_sensor():
-    heading("Environment Sensors")
-    query = ("SELECT environment_sensor.environment_sensor_id, environment_name, sensor_type_name, sensor_low, "
-             "sensor_optimal, sensor_high "
-             "FROM environment_sensor "
-             "JOIN environment ON environment_sensor.environment_id=environment.environment_id "
-             "JOIN sensor_type ON environment_sensor.sensor_type_id=sensor_type.sensor_type_id")
+def view_profile_sensor():
+    heading("Profile Sensors")
+    query = ("SELECT profile_sensor.profile_sensor_id, profile_name, sensor_type_name, profile_sensor_low, "
+             "profile_sensor_optimal, profile_sensor_high "
+             "FROM profile_sensor "
+             "JOIN profile ON profile_sensor.profile_id=profile.profile_id "
+             "JOIN sensor_type ON profile_sensor.sensor_type_id=sensor_type.sensor_type_id")
     cursor.execute(query)
-    for (environment_sensor_id, environment_name, sensor_type_name, sensor_low, sensor_optimal, sensor_high) in cursor:
-        print("{0:6d} {1:20} {2:12} {3:6} {4:6} {5:6}".format(environment_sensor_id, environment_name, sensor_type_name,
-                                                              sensor_low, sensor_optimal, sensor_high))
+    for (profile_sensor_id, profile_name, sensor_type_name, profile_sensor_low, profile_sensor_optimal, profile_sensor_high) in cursor:
+        print("{0:6d} {1:20} {2:12} {3:>6} {4:>6} {5:>6}".format(profile_sensor_id, profile_name, sensor_type_name,
+                                                              profile_sensor_low, profile_sensor_optimal, profile_sensor_high))
 
 
 def heading(heading):
