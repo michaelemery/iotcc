@@ -40,30 +40,32 @@ def main():
     config = init()
     show_config(config)
     write_config(config, 'microhort.json')
-    # sensor_states = set_all_states_optimal(config)
-    # while True:
-    #     for sensor in sensor_states:
-    #         current_state = evaluate_sensor_state(sensor)
-    #         if (sensor['sensor_state'] != current_state):
-    #             generate_event(sensor)
-    #             sensor['sensor_state'] = current_state
+    sensor_state = init_sensor_states(config)
+    while True:
+        previous_sensor_state = sensor_state
+        sensor_state = evaluate_state(previous_sensor_state)
+        print(sensor_state)
+        exit()
 
 
-def set_all_states_optimal(config):
-    sensor_states = {}
-    for sensor in config['sensor_list']:
-        sensor_states.update({
-            'hub_sensor_id': sensor['hub_sensor_id'],
-            'sensor_state': OPTIMAL})
-    return sensor_states
+def evaluate_state(previous_sensor_state):
+    #for sensor_type in previous_sensor_state:
+        #get_average_value(sensor_type)
+    return None
+
+
+def init_sensor_states(config):
+    sensor_state = {}
+    for sensor in config['sensor']:
+        if sensor['sensor_type_id'] not in sensor_state:
+            sensor_state.update({sensor['sensor_type_id']: OPTIMAL})
+    return sensor_state
 
 
 # configure application with all start-up information
 def init():
-    mac = get_mac('eth0')
-    hub = get_hub(mac)
+    hub = get_hub(get_mac('eth0'))
     config = {
-        'mac': mac,
         'hub': hub,
         'controller_type': get_controller_types(),
         'controller': get_controllers(hub['hub_id']),
@@ -219,7 +221,7 @@ def get_profile_sensor(hub_profile_id):
 
 # output configuration summary to the console
 def show_config(config):
-    print("\nIdentified MAC {}".format(config['mac']))
+    print("\nIdentified MAC {}".format(config['hub']['hub_mac']))
     print("Welcome to {} running {}.".format(config['hub']['hub_name'], config['profile']['profile_name']))
     print("\nLimits:")
     for sensor in config['profile_sensor']:
