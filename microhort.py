@@ -19,6 +19,9 @@
 
 import mysql.connector
 import json
+import Adafruit_DHT
+from datetime import datetime
+
 
 # --- SET GLOBAL CONSTANTS ---
 
@@ -35,34 +38,21 @@ LOW = -1
 OPTIMAL = 0
 HIGH = 1
 
+# sensor info
+HT_SENSOR_MODEL = 22
+
 
 def main():
     config = init()
     show_config(config)
     write_config(config, 'microhort.json')
-    sensor_state = init_sensor_states(config)
-    # while True:
-    #     previous_sensor_state = sensor_state
-    #     sensor_state = evaluate_state(previous_sensor_state)
-    #     for sensor_type in sensor_state:
-    #         pass
-    exit()
-
-
-
-
-def evaluate_state(previous_sensor_state):
-    for sensor_type in previous_sensor_state:
-        get_average_value(sensor_type)
-    return None
-
-
-def init_sensor_states(config):
-    sensor_state = {}
-    for sensor in config['sensor']:
-        if sensor['sensor_type_id'] not in sensor_state:
-            sensor_state.update({sensor['sensor_type_id']: OPTIMAL})
-    return sensor_state
+    previous_sensor_type_states = init_sensor_type_states(config)
+    print("\nRunning (ctrl-c to abort)\n")
+    while True:
+        sensor_type_states = evaluate_sensor_type_states(previous_sensor_type_states, config)
+        for sensor_type_state in sensor_type_states:
+            if sensor_type_state['sensor_type_id'] != previous_sensor_type_states['sensor_type_id']:
+                signal_event(sensor_type_state)
 
 
 # configure application with all start-up information
@@ -77,6 +67,56 @@ def init():
         'profile': get_profile(hub['hub_profile_id']),
         'profile_sensor': get_profile_sensor(hub['hub_profile_id'])}
     return config
+
+
+# build list of unique sensor types and initialise them with state of OPTIMAL
+def init_sensor_type_states(config):
+    sensor_type_states = []
+    for sensor in config['sensor']:
+        if sensor['sensor_type_id'] not in sensor_type_states:
+            sensor_type_states.append({sensor['sensor_type_id']: OPTIMAL})
+    return sensor_type_states
+
+
+# returns the state (LOW, OPTIMAL, HIGH) of all sensor types
+def evaluate_sensor_type_states(previous_sensor_type_states, config):
+    sensor_type_states = []
+    for sensor_type_state in previous_sensor_type_states:
+        average = get_average_value(sensor_type_state, config['sensors'])
+        if average <= config['profile_sensor']['sensor_type_low']:
+            state = LOW
+        elif average == sensor_type_state['sensor_type_optimal']:
+            state = OPTIMAL
+        elif average >= sensor_type_state['sensor_type_high']:
+            state = HIGH
+        else:
+            state = sensor_type_state['sensor_type_id']
+        sensor_type_states.append({sensor_type_state: state})
+    return sensor_type_states
+
+
+# returns the average sensor reading for the specified sensor type
+def get_average_value(sensor_type_id, sensors):
+    print(sensor_type_id)
+    print(sensors)
+    total = 0
+    count = 0
+    for sensor in sensors:
+        if sensor['sensor_type_id'] == sensor_type_id:
+            if sensor['sensor_type_id'] == 1:
+                humidity, temperature = Adafruit_DHT.read_retry(HT_SENSOR_MODEL, sensor['gpio'])
+                total += temperature
+                count += 1
+            if sensor['sensor_type_id'] == 2:
+                humidity, temperature = Adafruit_DHT.read_retry(HT_SENSOR_MODEL, sensor['gpio'])
+                total += humidity
+                count += 1
+    return total / count
+
+
+# generates an event log and signals an event to be controlled
+def signal_event(sensor_type_state):
+    print("{} {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), sensor_type_state))
 
 
 # return mac address of interface
@@ -111,6 +151,7 @@ def get_hub(mac):
     return hub
 
 
+# returns a dictionary of controller types indexed by type id
 def get_controller_types():
     query = (
         "SELECT controller_type_id, controller_type_name, controller_type_max_run_time, controller_type_min_rest_time  "
@@ -126,6 +167,7 @@ def get_controller_types():
     return controller_types
 
 
+# returns a list of dictionaries for each controller
 def get_controllers(hub_id):
     query = (
         "SELECT controller_id, controller_gpio, controller_type_id  "
@@ -146,6 +188,7 @@ def get_controllers(hub_id):
     return controller
 
 
+# returns a dictionary of sensor types indexed by type id
 def get_sensor_types():
     query = (
         "SELECT sensor_type_id, sensor_type_name, sensor_type_low_controller_type_id, "
@@ -163,7 +206,7 @@ def get_sensor_types():
     return sensor_types
 
 
-# return list of sensor info dictionaries for a hub
+# returns a list of dictionaries for each sensor
 def get_sensors(hub_id):
     query = (
         "SELECT sensor_id, sensor_gpio, sensor_type_id "
@@ -227,18 +270,20 @@ def show_config(config):
     print("\nIdentified MAC {}".format(config['hub']['hub_mac']))
     print("Welcome to {} running {}.".format(config['hub']['hub_name'], config['profile']['profile_name']))
     print("\nLimits:")
-    for sensor in config['profile_sensor']:
-        print("  {} ({} -> {} <- {})".format(config['sensor_type'][sensor['sensor_type_id']]['sensor_type_name'],
-                                             sensor['profile_sensor_low'],
-                                             sensor['profile_sensor_optimal'],
-                                             sensor['profile_sensor_high']))
+    for sensor_type in config['profile_sensor']:
+        print("  {} ({} -> {} <- {})".format(config['sensor_type'][sensor_type['sensor_type_id']]['sensor_type_name'],
+                                             sensor_type['profile_sensor_low'],
+                                             sensor_type['profile_sensor_optimal'],
+                                             sensor_type['profile_sensor_high']))
     print("\nGPIO <-- Sensor Register:")
-    for sensor in config['sensor']:
-        print("  {:2d} <-- {}".format(sensor['sensor_gpio'], config['sensor_type'][sensor['sensor_type_id']]['sensor_type_name']));
+    for sensor_type in config['sensor']:
+        print("  {:2d} <-- {}".format(sensor_type['sensor_gpio'],
+                                      config['sensor_type'][sensor_type['sensor_type_id']]['sensor_type_name']));
     print("\nGPIO --> Controller Register:")
     for controller in config['controller']:
         print("  {:2d} --> {}".format(controller['controller_gpio'],
-                                      config['controller_type'][controller['controller_type_id']]['controller_type_name']))
+                                      config['controller_type'][controller['controller_type_id']][
+                                          'controller_type_name']))
     print("")
 
 
