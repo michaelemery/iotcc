@@ -31,7 +31,7 @@ CREATE TABLE controller_type (
 
 CREATE TABLE controller (
     controller_id INT AUTO_INCREMENT PRIMARY KEY,
-    hub_id INT,
+    controller_hub_id INT,
     controller_gpio INT,
     controller_type_id INT
 );
@@ -49,7 +49,7 @@ CREATE TABLE sensor_type (
 
 CREATE TABLE sensor (
     sensor_id INT AUTO_INCREMENT PRIMARY KEY,
-    hub_id INT,
+    sensor_hub_id INT,
     sensor_gpio INT,
     sensor_type_id INT
 );
@@ -64,7 +64,6 @@ CREATE TABLE profile_sensor (
     profile_id INT,
     sensor_type_id INT,
     profile_sensor_low INT,
-    profile_sensor_optimal INT,
     profile_sensor_high INT
 );
 
@@ -105,7 +104,7 @@ VALUES
     ('Watering System', '5', '600');
 
 INSERT INTO controller
-    (hub_id, controller_gpio, controller_type_id)
+    (controller_hub_id, controller_gpio, controller_type_id)
 VALUES
     (1, 18, 1),  -- emery    18 = heater
     (1, 23, 2),  -- emery    23 = cooling fan
@@ -118,7 +117,7 @@ VALUES
     (3, 24, 3);  -- whiting  26 = watering system
 
 INSERT INTO sensor_type
-    (sensor_type_name, sensor_type_low_controller_type_id, 
+    (sensor_type_name, sensor_type_low_controller_type_id,
         sensor_type_high_controller_type_id)
 VALUES
     -- set heater as low temperature controller and
@@ -129,14 +128,14 @@ VALUES
     ('Moisture', 3, NULL);
 
 INSERT INTO sensor
-    (hub_id, sensor_gpio, sensor_type_id)
+    (sensor_hub_id, sensor_gpio, sensor_type_id)
 VALUES
     (1, 17, 1),  -- emery   17 = temperature
-    (1, 27, 2),  -- emery   27 = moisture
-    (2,  5, 1),  -- judd     5 = temperature
-    (2,  6, 2),  -- judd     6 = moisture
-    (3, 13, 1),  -- whiting 13 = temperature
-    (3, 19, 2);  -- whiting 19 = moisture
+    (1, 17, 2),  -- emery   17 = moisture
+    (2, 27, 1),  -- judd    27 = temperature
+    (2, 27, 2),  -- judd    27 = moisture
+    (3, 22, 1),  -- whiting 22 = temperature
+    (3, 22, 2);  -- whiting 22 = moisture
 
 INSERT INTO profile
     (profile_name)
@@ -146,18 +145,18 @@ VALUES
     ('Tropical Fern');
 
 INSERT INTO profile_sensor
-    (profile_id, sensor_type_id, profile_sensor_low, profile_sensor_optimal,
+    (profile_id, sensor_type_id, profile_sensor_low,
         profile_sensor_high)
 VALUES
-    -- set Temperate Herb temperature range to (2, 22, 30)
-    (1, 1, 2, 22, 30),
-    -- set Temperate Herb moisture range to (2, 10, NULL)
-    (1, 2, 2, 10, NULL),
-    -- set Desert Cacti temperature range to (5, 20, 26)
-    (2, 1, 5, 20, 26),
-    -- set Desert Cacti moisture range to (8, 15, NULL)
-    (2, 2, 8, 15, NULL),
-    -- set Tropical Fern temperature range to (12, 28, 36)
-    (3, 1, 12, 28, 36),
-    -- set Tropical Fern moisture range to (17, 35, NULL)
-    (3, 2, 17, 35, NULL);
+    -- set Temperate Herb temperature range
+    (1, 1, 13, 26),
+    -- set Temperate Herb moisture range
+    (1, 2, 60, NULL),
+    -- set Desert Cacti temperature range
+    (2, 1, 12, 28),
+    -- set Desert Cacti moisture range
+    (2, 2, 58, NULL),
+    -- set Tropical Fern temperature range
+    (3, 1, 14, 27),
+    -- set Tropical Fern moisture range
+    (3, 2, 63, NULL);
