@@ -47,9 +47,8 @@ def main():
     show_config(config)
     write_config(config, 'microhort.json')
     print("\nRunning (ctrl-c to abort)\n")
-    sensor_type_states = init_sensor_type_states(config['sensor'])
+    previous_sensor_type_states = init_sensor_type_states(config['sensor'])
     while True:
-        previous_sensor_type_states = sensor_type_states
         print("{}".format(previous_sensor_type_states))
         sensor_type_states = evaluate_sensor_type_states(
             previous_sensor_type_states, config['sensor'], config['profile_sensor']
@@ -57,6 +56,7 @@ def main():
         print("{}\n".format(sensor_type_states))
         for sensor_type_id in sensor_type_states:
             if sensor_type_states[sensor_type_id] != previous_sensor_type_states[sensor_type_id]:
+                previous_sensor_type_states[sensor_type_id] = sensor_type_states[sensor_type_id]
                 signal_event(sensor_type_states[sensor_type_id])
 
 
