@@ -41,15 +41,19 @@ def main():
     show_config(config)
     write_config(config, 'microhort.json')
     sensor_state = init_sensor_states(config)
-    while True:
-        previous_sensor_state = sensor_state
-        sensor_state = evaluate_state(previous_sensor_state)
-        exit()
+    # while True:
+    #     previous_sensor_state = sensor_state
+    #     sensor_state = evaluate_state(previous_sensor_state)
+    #     for sensor_type in sensor_state:
+    #         pass
+    exit()
+
+
 
 
 def evaluate_state(previous_sensor_state):
-    #for sensor_type in previous_sensor_state:
-        #get_average_value(sensor_type)
+    for sensor_type in previous_sensor_state:
+        get_average_value(sensor_type)
     return None
 
 
