@@ -17,6 +17,7 @@
 #
 # --------------------------------------
 
+import RPi.GPIO as GPIO
 import mysql.connector
 import json
 import Adafruit_DHT
@@ -33,33 +34,45 @@ CONN = mysql.connector.connect(
     database='microhort')
 CURSOR = CONN.cursor()
 
-# state
+# set profile state constants
 LOW = -1
 STABLE = 0
 HIGH = 1
 
-# sensor info
+# hardware info
+SWITCH = 26
 HT_SENSOR_MODEL = Adafruit_DHT.DHT22
+
+# set GPIO state constants
+OFF = GPIO.LOW
+ON  = GPIO.HIGH
+
+# configure GPIO
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(SWITCH, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.add_event_detect(SWITCH, GPIO.FALLING)
 
 
 def main():
     config = init()
-    show_config(config)
-    write_config(config, 'microhort.json')
     print("\nRunning (ctrl-c to abort)\n")
     previous_sensor_type_states = init_sensor_type_states(config['sensor'])
     while True:
-        print('\n----------------------------------------\n')
-        print("Previous State: {}".format(previous_sensor_type_states))
-        sensor_type_states = evaluate_sensor_type_states(
-            previous_sensor_type_states, config['sensor'], config['profile_sensor']
-        )
-        print("Previous State: {}".format(previous_sensor_type_states))
-        print(" Current State: {}\n".format(sensor_type_states))
-        for sensor_type_id in sensor_type_states:
-            if sensor_type_states[sensor_type_id] != previous_sensor_type_states[sensor_type_id]:
-                previous_sensor_type_states[sensor_type_id] = sensor_type_states[sensor_type_id]
-                signal_event(sensor_type_states[sensor_type_id])
+        while not GPIO.event_detected(SWITCH):
+            print('\n----------------------------------------\n')
+            print("Previous State: {}".format(previous_sensor_type_states))
+            sensor_type_states = evaluate_sensor_type_states(
+                previous_sensor_type_states, config['sensor'], config['profile_sensor']
+            )
+            print("Previous State: {}".format(previous_sensor_type_states))
+            print(" Current State: {}\n".format(sensor_type_states))
+            for sensor_type_id in sensor_type_states:
+                if sensor_type_states[sensor_type_id] != previous_sensor_type_states[sensor_type_id]:
+                    previous_sensor_type_states[sensor_type_id] = sensor_type_states[sensor_type_id]
+                    signal_event(sensor_type_states[sensor_type_id])
+        config = init()
+        flush_event()
 
 
 # configure application with all start-up information
@@ -73,7 +86,8 @@ def init():
         'sensor': get_sensors(hub['hub_id']),
         'profile': get_profile(hub['hub_profile_id']),
         'profile_sensor': get_profile_sensor(hub['hub_profile_id'])}
-    print(config['controller_type'])
+    show_config(config)
+    write_config(config, 'microhort.json')
     return config
 
 
@@ -303,6 +317,12 @@ def read_config(filename):
     with open(filename, 'r') as f:
         config = json.load(f)
     return config
+
+
+# flush residual button presses to prevent false events
+def flush_event():
+    time.sleep(0.5)
+    GPIO.event_detected(SWITCH)
 
 
 if __name__ == '__main__':
