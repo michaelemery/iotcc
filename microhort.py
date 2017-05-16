@@ -23,6 +23,7 @@ import json
 import Adafruit_DHT
 from datetime import datetime
 import time
+import copy
 
 # --- SET GLOBAL CONSTANTS ---
 
@@ -62,14 +63,15 @@ def main():
             print('\n--------------------------------\n')
             print("Previous State: {}".format(previous_sensor_type_states))
             sensor_type_states = evaluate_sensor_type_states(
-                previous_sensor_type_states, config['sensor'], config['profile_sensor']
+                copy.deepcopy(previous_sensor_type_states), config['sensor'], config['profile_sensor']
             )
             print("Previous State: {}".format(previous_sensor_type_states))
             print(" Current State: {}".format(sensor_type_states))
             for sensor_type_id in sensor_type_states:
                 if sensor_type_states[sensor_type_id] != previous_sensor_type_states[sensor_type_id]:
-                    previous_sensor_type_states[sensor_type_id] = sensor_type_states[sensor_type_id]
+                    previous_sensor_type_states[sensor_type_id] = init_sensor_type_states(config['sensor'])
                     signal_event(sensor_type_states[sensor_type_id])
+            previous_sensor_type_states = sensor_type_states
         flush_event()
         print('\n\n======= SYSTEM RESTARTED =======\n')
 
