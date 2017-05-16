@@ -19,11 +19,11 @@
 
 import RPi.GPIO as GPIO
 import mysql.connector
-import json
 import Adafruit_DHT
-from datetime import datetime
+import json
 import time
 import copy
+from datetime import datetime
 
 # --- SET GLOBAL CONSTANTS ---
 
@@ -136,31 +136,32 @@ def get_average_value(sensor_type_id, sensors):
 # generates an event log and signals an event to be controlled
 def signal_event(sensor_type_state, sensor_type_id, config):
     state_dictionary = {-1: 'Low', -0: 'Stable', 1: 'High'}
-    event_log_text = "{}: {} {} {}".format(
+    event_message = "{}: {} {} {}".format(
         datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         config['hub']['hub_name'],
         config['sensor_type'][sensor_type_id]['sensor_type_name'],
         state_dictionary[sensor_type_state[sensor_type_id]]
     )
-    print("\n[EVENT] {}\n".format(event_log_text))
-    event_log_entry = {
-        'dtg:': datetime.now(),
-        'hub_id': config['hub']['hub_id'],
-        'sensor_type_id': sensor_type_id,
-        'state': sensor_type_state[sensor_type_id],
-        'text': event_log_text
+    print("\n[EVENT] {}\n".format(event_message))
+    event_entry = {
+        'event_dtg:': datetime.now(),
+        'event_hub_id': config['hub']['hub_id'],
+        'event_profile_id': config['hub']['hub_profile_id'],
+        'event_sensor_type_id': sensor_type_id,
+        'event_state': sensor_type_state[sensor_type_id],
+        'event_message': event_message
     }
-    append_event_log(event_log_entry)
-    action_contoller(event_log_entry, config['controller_type'], config['controller'])
+    append_event(event_entry)
+    action_controller(event_entry, config['controller_type'], config['controller'])
 
 
 # writes an entry in the event log
-def append_event_log(event_log_entry):
+def append_event(event_entry):
     pass
 
 
 # stabilises the profile when in a non-stable event state
-def action_contoller(event_log_entry, controller_type, controller):
+def action_controller(event_entry, controller_type, controller):
     pass
 
 

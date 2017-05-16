@@ -67,15 +67,14 @@ CREATE TABLE profile_sensor (
     profile_sensor_high INT
 );
 
-CREATE TABLE datalog (
-    datalog_id INT AUTO_INCREMENT PRIMARY KEY,
-    dtg TIMESTAMP,
-    hub_id INT, 
-    profile_id INT,
-    sensor_type_id INT,
-    mean_sensor_value INT,
-    controller_type_id INT,
-    hub_controller_value INT
+CREATE TABLE event (
+    event_id INT AUTO_INCREMENT PRIMARY KEY,
+    event_dtg TIMESTAMP,
+    event_hub_id INT,
+    event_profile_id INT,
+    event_sensor_type_id INT,
+    event_state INT,
+    event_message VARCHAR(70)
 );
 
 -- populate tables with test configuration
