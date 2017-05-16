@@ -49,11 +49,13 @@ def main():
     print("\nRunning (ctrl-c to abort)\n")
     previous_sensor_type_states = init_sensor_type_states(config['sensor'])
     while True:
-        print("{}".format(previous_sensor_type_states))
+        print('\n----------------------------------------\n')
+        print("Previous State: {}".format(previous_sensor_type_states))
         sensor_type_states = evaluate_sensor_type_states(
             previous_sensor_type_states, config['sensor'], config['profile_sensor']
         )
-        print("{}\n".format(sensor_type_states))
+        print("Previous State: {}".format(previous_sensor_type_states))
+        print(" Current State: {}\n".format(sensor_type_states))
         for sensor_type_id in sensor_type_states:
             if sensor_type_states[sensor_type_id] != previous_sensor_type_states[sensor_type_id]:
                 previous_sensor_type_states[sensor_type_id] = sensor_type_states[sensor_type_id]
@@ -109,13 +111,12 @@ def get_average_value(sensor_type_id, sensors):
                 humidity, temperature = Adafruit_DHT.read_retry(HT_SENSOR_MODEL, sensor['sensor_gpio'])
                 total += temperature
                 count += 1
-                print('Temperature:')
+                print('Temperature: {}'.format(int(total / count)))
             if sensor['sensor_type_id'] == 2:
                 humidity, temperature = Adafruit_DHT.read_retry(HT_SENSOR_MODEL, sensor['sensor_gpio'])
                 total += humidity
                 count += 1
-                print('Humidity:')
-    print(int(total / count))
+                print('   Humidity: {}'.format(int(total / count)))
     time.sleep(1)
     return int(total / count)
 
