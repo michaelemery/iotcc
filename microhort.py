@@ -66,7 +66,7 @@ def main():
                 previous_sensor_type_states, config['sensor'], config['profile_sensor']
             )
             print("Previous State: {}".format(previous_sensor_type_states))
-            print(" Current State: {}\n".format(sensor_type_states))
+            print(" Current State: {}".format(sensor_type_states))
             for sensor_type_id in sensor_type_states:
                 if sensor_type_states[sensor_type_id] != previous_sensor_type_states[sensor_type_id]:
                     previous_sensor_type_states[sensor_type_id] = sensor_type_states[sensor_type_id]
