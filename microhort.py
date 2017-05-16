@@ -55,12 +55,11 @@ GPIO.add_event_detect(SWITCH, GPIO.FALLING)
 
 
 def main():
-    config = init()
-    print("\nRunning (ctrl-c to abort)\n")
-    previous_sensor_type_states = init_sensor_type_states(config['sensor'])
     while True:
+        config = init()
+        previous_sensor_type_states = init_sensor_type_states(config['sensor'])
         while not GPIO.event_detected(SWITCH):
-            print('\n----------------------------------------\n')
+            print('\n--------------------------------\n')
             print("Previous State: {}".format(previous_sensor_type_states))
             sensor_type_states = evaluate_sensor_type_states(
                 previous_sensor_type_states, config['sensor'], config['profile_sensor']
@@ -71,8 +70,8 @@ def main():
                 if sensor_type_states[sensor_type_id] != previous_sensor_type_states[sensor_type_id]:
                     previous_sensor_type_states[sensor_type_id] = sensor_type_states[sensor_type_id]
                     signal_event(sensor_type_states[sensor_type_id])
-        config = init()
         flush_event()
+        print('\n\n======= SYSTEM RESTARTED =======\n')
 
 
 # configure application with all start-up information
@@ -88,6 +87,7 @@ def init():
         'profile_sensor': get_profile_sensor(hub['hub_profile_id'])}
     show_config(config)
     write_config(config, 'microhort.json')
+    print("\nRunning (ctrl-c to abort)\n")
     return config
 
 
