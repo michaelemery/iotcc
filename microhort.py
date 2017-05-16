@@ -60,17 +60,13 @@ def main():
         config = init()
         previous_sensor_type_states = init_sensor_type_states(config['sensor'])
         while not GPIO.event_detected(SWITCH):
-            print('\n--------------------------------\n')
-            print("Previous State: {}".format(previous_sensor_type_states))
             sensor_type_states = evaluate_sensor_type_states(
                 copy.deepcopy(previous_sensor_type_states), config['sensor'], config['profile_sensor']
             )
-            print("Previous State: {}".format(previous_sensor_type_states))
-            print(" Current State: {}".format(sensor_type_states))
             for sensor_type_id in sensor_type_states:
                 if sensor_type_states[sensor_type_id] != previous_sensor_type_states[sensor_type_id]:
                     previous_sensor_type_states[sensor_type_id] = init_sensor_type_states(config['sensor'])
-                    signal_event(sensor_type_states[sensor_type_id])
+                    signal_event(sensor_type_states, sensor_type_id, config)
             previous_sensor_type_states = sensor_type_states
         flush_event()
         print('\n\n======= SYSTEM RESTARTED =======\n')
@@ -138,8 +134,34 @@ def get_average_value(sensor_type_id, sensors):
 
 
 # generates an event log and signals an event to be controlled
-def signal_event(sensor_type_state):
-    print("{} {}".format(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), sensor_type_state))
+def signal_event(sensor_type_state, sensor_type_id, config):
+    state_dictionary = {-1: 'Low', -0: 'Stable', 1: 'High'}
+    event_log_text = "{}: {} {} {}".format(
+        datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        config['hub']['hub_name'],
+        config['sensor_type'][sensor_type_id]['sensor_type_name'],
+        state_dictionary[sensor_type_state[sensor_type_id]]
+    )
+    print("\n[EVENT] {}\n".format(event_log_text))
+    event_log_entry = {
+        'dtg:': datetime.now(),
+        'hub_id': config['hub']['hub_id'],
+        'sensor_type_id': sensor_type_id,
+        'state': sensor_type_state[sensor_type_id],
+        'text': event_log_text
+    }
+    append_event_log(event_log_entry)
+    action_contoller(event_log_entry, config['controller_type'], config['controller'])
+
+
+# an entry in the event log
+def append_event_log(event_log_entry):
+    pass
+
+
+# stabilises the profile when in a non-stable event state
+def action_contoller(event_log_entry, controller_type, controller):
+    pass
 
 
 # return mac address of interface
