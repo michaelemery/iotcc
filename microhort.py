@@ -154,7 +154,7 @@ def signal_event(sensor_type_state, sensor_type_id, config):
     action_contoller(event_log_entry, config['controller_type'], config['controller'])
 
 
-# an entry in the event log
+# writes an entry in the event log
 def append_event_log(event_log_entry):
     pass
 
