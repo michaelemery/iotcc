@@ -129,7 +129,7 @@ def get_average_value(sensor_type_id, sensors):
                 total += humidity
                 count += 1
                 print('   Humidity: {}'.format(int(total / count)))
-    time.sleep(1)
+    time.sleep(2)
     return int(total / count)
 
 
