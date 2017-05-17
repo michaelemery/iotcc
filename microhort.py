@@ -142,7 +142,7 @@ def signal_event(sensor_type_state, sensor_type_id, config):
         config['sensor_type'][sensor_type_id]['sensor_type_name'],
         state_dictionary[sensor_type_state[sensor_type_id]]
     )
-    print("\n[EVENT] {}\n".format(event_message))
+    print("\n[SENSOR] {}\n".format(event_message))
     event_entry = {
         'event_dtg:': datetime.now(),
         'event_hub_id': config['hub']['hub_id'],
