@@ -148,14 +148,14 @@ INSERT INTO profile_sensor
         profile_sensor_high)
 VALUES
     -- set Temperate Herb temperature range
-    (1, 1, 13, 26),
+    (1, 1, 20, 25),
     -- set Temperate Herb moisture range
     (1, 2, 60, NULL),
     -- set Desert Cacti temperature range
-    (2, 1, 12, 28),
+    (2, 1, 22, 27),
     -- set Desert Cacti moisture range
-    (2, 2, 58, NULL),
+    (2, 2, 59, NULL),
     -- set Tropical Fern temperature range
-    (3, 1, 14, 27),
+    (3, 1, 21, 26),
     -- set Tropical Fern moisture range
-    (3, 2, 63, NULL);
+    (3, 2, 61, NULL);
