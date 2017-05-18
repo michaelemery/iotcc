@@ -68,13 +68,13 @@ def http_request(event_entry):
             return "The event has been logged successfully"
 
 
-print ("starting request")
-event_entry = {
-        'event_dtg:': str(datetime.now()),
-        'event_hub_id': 'id number 3',
-        'event_profile_id': 'hub profile 3',
-        'event_sensor_type_id': 'sensor 3',
-        'event_state': 'event 3',
-        'event_message': 'too hot'
-    }
-http_request(event_entry)
+# print ("starting request")
+# event_entry = {
+#         'event_dtg:': str(datetime.now()),
+#         'event_hub_id': 'id number 3',
+#         'event_profile_id': 'hub profile 3',
+#         'event_sensor_type_id': 'sensor 3',
+#         'event_state': 'event 3',
+#         'event_message': 'too hot'
+#     }
+# http_request(event_entry)
