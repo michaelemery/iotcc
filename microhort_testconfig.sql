@@ -56,9 +56,7 @@ CREATE TABLE sensor (
 
 CREATE TABLE profile (
     profile_id INT AUTO_INCREMENT PRIMARY KEY,
-    profile_name VARCHAR(40) UNIQUE,
-    profile_lights_on TIME,
-    profile_lights_off TIME
+    profile_name VARCHAR(40) UNIQUE
 );
 
 CREATE TABLE profile_sensor (
@@ -141,9 +139,9 @@ VALUES
 INSERT INTO profile
     (profile_name)
 VALUES
-    ('Temperate Herb', '07:30', '18:00'),
-    ('Desert Cacti', '08:00','18:30'),
-    ('Tropical Fern', '07:00', '19:00');
+  ('Desert Cacti'),
+  ('Temperate Herb'),
+  ('Tropical Fern');
 
 INSERT INTO profile_sensor
     (profile_id, sensor_type_id, profile_sensor_low,
