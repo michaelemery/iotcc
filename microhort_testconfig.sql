@@ -141,9 +141,9 @@ VALUES
 INSERT INTO profile
     (profile_name)
 VALUES
-    ('Temperate Herb'),
-    ('Desert Cacti'),
-    ('Tropical Fern');
+    ('Temperate Herb', '07:30', '18:00'),
+    ('Desert Cacti', '08:00','18:30'),
+    ('Tropical Fern', '07:00', '19:00');
 
 INSERT INTO profile_sensor
     (profile_id, sensor_type_id, profile_sensor_low,
