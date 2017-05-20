@@ -57,8 +57,8 @@ CREATE TABLE sensor (
 CREATE TABLE profile (
     profile_id INT AUTO_INCREMENT PRIMARY KEY,
     profile_name VARCHAR(40) UNIQUE,
-    profile_time_on TIME,
-    profile_time_off TIME
+    profile_lighting_on TIME,
+    profile_lighting_off TIME
 );
 
 CREATE TABLE profile_sensor (
@@ -139,7 +139,7 @@ VALUES
     (3, 22, 2);  -- whiting 22 = moisture
 
 INSERT INTO profile
-    (profile_name, profile_time_on, profile_time_off)
+    (profile_name, profile_lighting_on, profile_lighting_off)
 VALUES
     ('Desert Cacti', '08:00', '18:00'),
     ('Temperate Herb', '07:30', '17:30'),
