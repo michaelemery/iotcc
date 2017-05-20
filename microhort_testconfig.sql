@@ -56,7 +56,9 @@ CREATE TABLE sensor (
 
 CREATE TABLE profile (
     profile_id INT AUTO_INCREMENT PRIMARY KEY,
-    profile_name VARCHAR(40) UNIQUE
+    profile_name VARCHAR(40) UNIQUE,
+    profile_lights_on TIME,
+    profile_lights_off TIME
 );
 
 CREATE TABLE profile_sensor (
