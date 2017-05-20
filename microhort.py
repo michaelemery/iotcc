@@ -23,6 +23,7 @@ import Adafruit_DHT
 import json
 import time
 import copy
+import data_log_request
 from datetime import datetime
 
 # --- SET GLOBAL CONSTANTS ---
@@ -157,6 +158,7 @@ def signal_event(sensor_type_state, sensor_type_id, config):
 
 # writes an entry in the event log
 def append_event(event_entry):
+    data_log_request.http_request(event_entry)
     pass
 
 
