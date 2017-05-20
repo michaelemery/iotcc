@@ -63,7 +63,6 @@ GPIO.add_event_detect(SWITCH, GPIO.FALLING)
 def main():
     while True:
         config = init()
-        print(config)
         previous_sensor_type_states = init_sensor_type_states(config['sensor'])
         while not GPIO.event_detected(SWITCH):
             sensor_type_states = evaluate_sensor_type_states(
@@ -85,7 +84,6 @@ def init():
     url = SERVER + "/getconfig"
     params = {"mac":str(mac)}
     resp = requests.get(url=url, params=params)
-    print("correct")
     config = convertMicroHortDictionary(json.loads(resp.text))
     if not any(config):
         print("something went wrong populating the config dict.")
@@ -353,29 +351,23 @@ def read_config(filename):
 # if something is broken loading from read_config(), it could definitely be this code.
 def convertIfDigit(dictionary):
     for k in dictionary:
-        print type(k)
         if (type(k) is str or type(k) is unicode) and k.isdigit():
             dictionary[int(k)] = dictionary.pop(k)
     return dictionary
 
 def convertMicroHortDictionary(dictionary):
-    print("yes")
     if type(dictionary) is not dict:
-        print("i leave")
         return
     for k in dictionary:
         if type(dictionary[k]) is dict:
             convertIfDigit(dictionary[k])
             convertMicroHortDictionary(dictionary[k])
-            print("done")
     return dictionary
-
 
 # flush residual button presses to prevent false events
 def flush_event():
     time.sleep(0.5)
     GPIO.event_detected(SWITCH)
-
 
 if __name__ == '__main__':
     try:
