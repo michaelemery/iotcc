@@ -57,8 +57,8 @@ CREATE TABLE sensor (
 CREATE TABLE profile (
     profile_id INT AUTO_INCREMENT PRIMARY KEY,
     profile_name VARCHAR(40) UNIQUE,
-    profile_lighting_on TIME,
-    profile_lighting_off TIME
+    profile_lighting_on VARCHAR(20),
+    profile_lighting_off VARCHAR(20)
 );
 
 CREATE TABLE profile_sensor (
@@ -67,6 +67,12 @@ CREATE TABLE profile_sensor (
     sensor_type_id INT,
     profile_sensor_low INT,
     profile_sensor_high INT
+);
+
+CREATE TABLE lighting (
+    lighting_id INT AUTO_INCREMENT PRIMARY KEY,
+    lighting_hub_id INT,
+    lighting_gpio INT
 );
 
 CREATE TABLE event (
@@ -91,9 +97,9 @@ VALUES
 INSERT INTO hub
     (hub_mac, hub_name, hub_profile_id, hub_owner_id)
 VALUES
-    ('b8:27:eb:0a:25:c5', 'Hub Emery', 1, 1),
-    ('b8:27:eb:08:05:94', 'Hub Judd', 2, 2),
-    ('b8:27:eb:bc:4d:a4', 'Hub Whiting', 3, 3);
+    ('b8:27:eb:0a:25:c5', 'Hub Emery', 2, 1),
+    ('b8:27:eb:08:05:94', 'Hub Judd', 3, 2),
+    ('b8:27:eb:bc:4d:a4', 'Hub Whiting', 4, 3);
 
 INSERT INTO controller_type
     (controller_type_name, controller_type_max_run_time,
@@ -113,9 +119,9 @@ VALUES
     (2, 18, 1),  -- judd     25 = heater
     (2, 23, 2),  -- judd     12 = cooling fan
     (2, 24, 3),  -- judd     16 = watering system
-    (3, 18, 1),  -- whiting  20 = heater
-    (3, 23, 2),  -- whiting  21 = cooling fan
-    (3, 24, 3);  -- whiting  26 = watering system
+    (3, 18, 1),  -- whiting  18 = heater
+    (3, 23, 2),  -- whiting  23 = cooling fan
+    (3, 24, 3);  -- whiting  24 = watering system
 
 INSERT INTO sensor_type
     (sensor_type_name, sensor_type_low_controller_type_id,
@@ -141,23 +147,35 @@ VALUES
 INSERT INTO profile
     (profile_name, profile_lighting_on, profile_lighting_off)
 VALUES
-    ('Desert Cacti', '08:00', '18:00'),
-    ('Temperate Herb', '07:30', '17:30'),
-    ('Tropical Fern', '07:00', '17:00');
+    ('Household Plant', '07:00', '18:00'),
+    ('Temperate Herb', '07:00', '17:00'),
+    ('Tropical Fern', '07:30', '17:30'),
+    ('Desert Cacti', '08:00', '18:00');
 
 INSERT INTO profile_sensor
     (profile_id, sensor_type_id, profile_sensor_low,
         profile_sensor_high)
 VALUES
+    -- set Household Plant temperature range
+    (1, 1, 19, 25),
+    -- set Household Plant moisture range
+    (1, 2, 62, NULL),
     -- set Temperate Herb temperature range
-    (1, 1, 20, 25),
+    (2, 1, 20, 25),
     -- set Temperate Herb moisture range
-    (1, 2, 60, NULL),
-    -- set Desert Cacti temperature range
-    (2, 1, 22, 27),
-    -- set Desert Cacti moisture range
-    (2, 2, 59, NULL),
-    -- set Tropical Fern temperature range
+    (2, 2, 60, NULL),
+        -- set Tropical Fern temperature range
     (3, 1, 21, 26),
     -- set Tropical Fern moisture range
-    (3, 2, 61, NULL);
+    (3, 2, 61, NULL),
+    -- set Desert Cacti temperature range
+    (4, 1, 22, 27),
+    -- set Desert Cacti moisture range
+    (4, 2, 59, NULL);
+
+INSERT INTO lighting
+    (lighting_hub_id, lighting_gpio)
+VALUES
+    (1, 20),  -- emery   20 = lights
+    (2, 20),  -- judd    20 = lights
+    (3, 20);  -- whiting 20 = lights
