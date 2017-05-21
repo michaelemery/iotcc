@@ -17,6 +17,7 @@
 #
 # --------------------------------------
 
+import os
 import RPi.GPIO as GPIO
 import mysql.connector
 import Adafruit_DHT
@@ -24,7 +25,10 @@ import json
 import time
 import copy
 import data_log_request
+from time import strftime
 from datetime import datetime
+from picamera import PiCamera
+
 
 # --- SET GLOBAL CONSTANTS ---
 
@@ -36,31 +40,50 @@ CONN = mysql.connector.connect(
     database='microhort')
 CURSOR = CONN.cursor()
 
+# hardware info
+HT_SENSOR_MODEL = Adafruit_DHT.DHT22
+CAMERA = PiCamera()
+
+# set GPIO constants
+OFF = GPIO.LOW
+ON  = GPIO.HIGH
+CONFIG_SWITCH = 26
+CAMERA_SWITCH = 19
+GPIO_INPUT = [17, 27, 22, 5, 6, 13]
+GPIO_OUTPUT = [18, 23, 24, 25, 12, 16, 20, 21]
+
+# configure GPIO
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(CONFIG_SWITCH, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(CAMERA_SWITCH, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(GPIO_INPUT, GPIO.IN)
+GPIO.setup(GPIO_OUTPUT, GPIO.OUT)
+GPIO.add_event_detect(CONFIG_SWITCH, GPIO.FALLING)
+GPIO.add_event_detect(CAMERA_SWITCH, GPIO.FALLING)
+
 # set profile state constants
 LOW = -1
 STABLE = 0
 HIGH = 1
 
-# hardware info
-SWITCH = 26
-HT_SENSOR_MODEL = Adafruit_DHT.DHT22
+# set lighting constants
+ON = True
+OFF = False
 
-# set GPIO state constants
-OFF = GPIO.LOW
-ON  = GPIO.HIGH
-
-# configure GPIO
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(SWITCH, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.add_event_detect(SWITCH, GPIO.FALLING)
+# files
+JSON_FILE = '/home/' + os.environ['SUDO_USER'] + '/microhort/microhort.json'
+IMAGE_PATH = '/home/' + os.environ['SUDO_USER'] + '/microhort/image/'
 
 
 def main():
+    lights = OFF
     while True:
         config = init()
+        if lights == OFF:
+            switch_lights(OFF, config['lighting'])
         previous_sensor_type_states = init_sensor_type_states(config['sensor'])
-        while not GPIO.event_detected(SWITCH):
+        while not GPIO.event_detected(CONFIG_SWITCH):
             sensor_type_states = evaluate_sensor_type_states(
                 copy.deepcopy(previous_sensor_type_states), config['sensor'], config['profile_sensor']
             )
@@ -69,7 +92,16 @@ def main():
                     previous_sensor_type_states[sensor_type_id] = init_sensor_type_states(config['sensor'])
                     signal_event(sensor_type_states, sensor_type_id, config)
             previous_sensor_type_states = sensor_type_states
-        flush_event()
+            current_time = strftime('%H:%M')
+            if not lights and current_time == config['profile']['profile_lighting_on']:
+                switch_lights(ON, config['lighting'])
+                lights = True
+            if lights and current_time == config['profile']['profile_lighting_off']:
+                switch_lights(OFF, config['lighting'])
+                lights = False
+            if GPIO.event_detected(CAMERA_SWITCH):
+                capture_image(IMAGE_PATH)
+        flush_event(CONFIG_SWITCH)
         print('\n\n======= SYSTEM RESTARTED =======\n')
 
 
@@ -83,9 +115,11 @@ def init():
         'sensor_type': get_sensor_types(),
         'sensor': get_sensors(hub['hub_id']),
         'profile': get_profile(hub['hub_profile_id']),
-        'profile_sensor': get_profile_sensor(hub['hub_profile_id'])}
+        'profile_sensor': get_profile_sensor(hub['hub_profile_id']),
+        'lighting': get_lighting(hub['hub_profile_id'])
+    }
     show_config(config)
-    write_config(config, 'microhort.json')
+    write_config(config, JSON_FILE)
     print("\nRunning (ctrl-c to abort)\n")
     return config
 
@@ -158,7 +192,7 @@ def signal_event(sensor_type_state, sensor_type_id, config):
 
 # writes an entry in the event log
 def append_event(event_entry):
-    data_log_request.http_request(event_entry)
+    #data_log_request.http_request(event_entry)
     pass
 
 
@@ -278,23 +312,26 @@ def get_sensors(hub_id):
 # return profile information for given profile id
 def get_profile(hub_profile_id):
     query = (
-        "SELECT profile_id, profile_name "
+        "SELECT profile_id, profile_name, profile_lighting_on, profile_lighting_off "
         "FROM profile "
         "WHERE profile.profile_id "
         "LIKE ({})".format(hub_profile_id)
     )
     CURSOR.execute(query)
     profile = {}
-    for profile_id, profile_name in CURSOR:
-        profile = {'profile_id': profile_id, 'profile_name': profile_name}
+    for profile_id, profile_name, profile_lighting_on, profile_lighting_off in CURSOR:
+        profile = {
+            'profile_id': profile_id,
+            'profile_name': profile_name,
+            'profile_lighting_on': profile_lighting_on,
+            'profile_lighting_off': profile_lighting_off}
     return profile
 
 
 # return sensor profiles for given hub profile
 def get_profile_sensor(hub_profile_id):
     query = (
-        "SELECT profile_sensor_id, profile_id, sensor_type_id, profile_sensor_low, "
-        "profile_sensor_high "
+        "SELECT profile_sensor_id, profile_id, sensor_type_id, profile_sensor_low, profile_sensor_high "
         "FROM profile_sensor "
         "WHERE profile_id "
         "LIKE %s"
@@ -309,6 +346,21 @@ def get_profile_sensor(hub_profile_id):
             }
         })
     return profile_sensor
+
+
+# return lighting ports
+def get_lighting(hub_profile_id):
+    query = (
+        "SELECT lighting_id, lighting_hub_id, lighting_gpio "
+        "FROM lighting "
+        "WHERE lighting_hub_id "
+        "LIKE %s"
+    )
+    CURSOR.execute(query, str(hub_profile_id))
+    lighting = []
+    for lighting_id, lighting_hub_id, lighting_gpio in CURSOR:
+        lighting.append(lighting_gpio)
+    return lighting
 
 
 # output configuration summary to the console
@@ -330,7 +382,30 @@ def show_config(config):
         print("  {:2d} --> {}".format(controller['controller_gpio'],
                                       config['controller_type'][controller['controller_type_id']][
                                           'controller_type_name']))
+    print("\nGPIO --> Lighting Register:")
+    for lighting in config['lighting']:
+        print("  {:2d} --> Lighting Array".format(lighting))
     print("")
+
+
+# switch lights on or off
+def switch_lights(on, gpio):
+    if on:
+        state = GPIO.HIGH
+        text = 'ON'
+    else:
+        state = GPIO.LOW
+        text = 'OFF'
+    GPIO.output(gpio, state)
+    print("\n[LIGHTS] ### " + text + " ###\n")
+
+
+# capture image from camera and save to file
+def capture_image(path):
+    filename = strftime('%Y%m%d%H%M%S') + ".jpg"
+    CAMERA.capture(path + filename)
+    print("\n[CAMERA] " + path + filename + "\n")
+    flush_event(CAMERA_SWITCH)
 
 
 # write configuration data to file
@@ -347,9 +422,9 @@ def read_config(filename):
 
 
 # flush residual button presses to prevent false events
-def flush_event():
+def flush_event(gpio):
     time.sleep(0.5)
-    GPIO.event_detected(SWITCH)
+    GPIO.event_detected(gpio)
 
 
 if __name__ == '__main__':
@@ -360,3 +435,4 @@ if __name__ == '__main__':
     finally:
         CURSOR.close()
         CONN.close()
+        GPIO.cleanup()
