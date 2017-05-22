@@ -79,9 +79,9 @@ IMAGE_PATH = '/home/' + os.environ['SUDO_USER'] + '/microhort/image/'
 
 
 def main():
-    lighting_state = OFF
     while True:
         config = init()
+        lighting_state = OFF
         previous_sensor_type_states = init_sensor_type_states(config['sensor'])
         while not GPIO.event_detected(CONFIG_SWITCH):
             sensor_type_states = evaluate_sensor_type_states(
