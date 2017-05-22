@@ -17,6 +17,7 @@
 #
 # --------------------------------------
 
+
 import os
 import RPi.GPIO as GPIO
 import mysql.connector
@@ -47,10 +48,11 @@ CAMERA.vflip = True
 CAMERA.hflip = True
 
 # set GPIO constants
-OFF = GPIO.LOW
-ON  = GPIO.HIGH
+GPIO_OFF = GPIO.LOW
+GPIO_ON  = GPIO.HIGH
 CONFIG_SWITCH = 26
 CAMERA_SWITCH = 19
+CONFIG_LED = 21
 GPIO_INPUT = [17, 27, 22, 5, 6, 13]
 GPIO_OUTPUT = [18, 23, 24, 25, 12, 16, 20, 21]
 
@@ -70,18 +72,24 @@ STABLE = 0
 HIGH = 1
 
 # set lighting constants
-ON = True
-OFF = False
+LIGHTING_ON = True
+LIGHTING_OFF = False
 
-# files
+# set file constants
 JSON_FILE = '/home/' + os.environ['SUDO_USER'] + '/microhort/microhort.json'
 IMAGE_PATH = '/home/' + os.environ['SUDO_USER'] + '/microhort/image/'
+
+# set daily image capture-time constant
+CAPTURE_TIME = '12:00'
 
 
 def main():
     while True:
         config = init()
-        lighting_state = OFF
+        previous_capture_date = '1970-01-01'
+        GPIO.output(CONFIG_LED, GPIO_OFF)
+        lighting_state = LIGHTING_OFF
+        switch_lights(lighting_state, config['lighting_gpio'], 'SYSTEM START')
         previous_sensor_type_states = init_sensor_type_states(config['sensor'])
         while not GPIO.event_detected(CONFIG_SWITCH):
             sensor_type_states = evaluate_sensor_type_states(
@@ -92,36 +100,17 @@ def main():
                     previous_sensor_type_states[sensor_type_id] = init_sensor_type_states(config['sensor'])
                     signal_event(sensor_type_states, sensor_type_id, config)
             previous_sensor_type_states = sensor_type_states
-            lighting_state = set_profile_lighting(config['lighting'], config['profile'], lighting_state)
+            lighting_state = set_profile_lighting(config['lighting_gpio'], config['profile'], lighting_state)
+            current_time = strftime('%H:%M')
+            current_date = strftime('%Y-%m-%d')
+            if current_time == CAPTURE_TIME and current_date > previous_capture_date:
+                capture_image(IMAGE_PATH, 'AUTO', current_time)
+                previous_capture_date = current_date
             if GPIO.event_detected(CAMERA_SWITCH):
-                capture_image(IMAGE_PATH)
+                capture_image(IMAGE_PATH, 'MANUAL', current_time)
+
         flush_event(CONFIG_SWITCH)
         print('\n\n======= SYSTEM RESTARTED =======\n')
-
-
-def set_profile_lighting(lighting, lighting_profile, lighting_state):
-    current_time = strftime('%H:%M')
-    time_on = lighting_profile['profile_lighting_on']
-    time_off = lighting_profile['profile_lighting_off']
-    if time_on <= current_time < time_off and lighting_state == OFF:
-        switch_lights(ON, lighting, time_on)
-        lighting_state = ON
-    elif time_off <= current_time and lighting_state == ON:
-        switch_lights(OFF, lighting, time_off)
-        lighting_state = OFF
-    return lighting_state
-
-
-# switch lights on or off
-def switch_lights(on, gpio, time):
-    if on:
-        state = GPIO.HIGH
-        text = 'ON'
-    else:
-        state = GPIO.LOW
-        text = 'OFF'
-    GPIO.output(gpio, state)
-    print("\n[LIGHTS] ### " + text + " : {}\n".format(time))
 
 
 # configure application with all start-up information
@@ -135,7 +124,7 @@ def init():
         'sensor': get_sensors(hub['hub_id']),
         'profile': get_profile(hub['hub_profile_id']),
         'profile_sensor': get_profile_sensor(hub['hub_profile_id']),
-        'lighting': get_lighting(hub['hub_profile_id'])
+        'lighting_gpio': get_lighting(hub['hub_profile_id'])
     }
     show_config(config)
     write_config(config, JSON_FILE)
@@ -207,6 +196,32 @@ def signal_event(sensor_type_state, sensor_type_id, config):
     }
     append_event(event_entry)
     action_controller(event_entry, config['controller_type'], config['controller'])
+
+
+# toggles lighting as required for profile and returns state of profile lighting
+def set_profile_lighting(lighting_gpio, lighting_profile, lighting_state):
+    current_time = strftime('%H:%M')
+    time_on = lighting_profile['profile_lighting_on']
+    time_off = lighting_profile['profile_lighting_off']
+    if time_on <= current_time < time_off and lighting_state == LIGHTING_OFF:
+        switch_lights(LIGHTING_ON, lighting_gpio, time_on)
+        lighting_state = LIGHTING_ON
+    elif time_off <= current_time and lighting_state == LIGHTING_ON:
+        switch_lights(LIGHTING_OFF, lighting_gpio, time_off)
+        lighting_state = LIGHTING_OFF
+    return lighting_state
+
+
+# switch lights on or off
+def switch_lights(lights_are_on, lighting_gpio, message):
+    if lights_are_on:
+        state = GPIO_ON
+        text = 'ON'
+    else:
+        state = GPIO_OFF
+        text = 'OFF'
+    GPIO.output(lighting_gpio, state)
+    print("\n[LIGHTS] ### " + text + " : {}\n".format(message))
 
 
 # writes an entry in the event log
@@ -407,16 +422,16 @@ def show_config(config):
                                       config['controller_type'][controller['controller_type_id']][
                                           'controller_type_name']))
     print("\nGPIO --> Lighting Register:")
-    for lighting in config['lighting']:
+    for lighting in config['lighting_gpio']:
         print("  {:2d} --> Lighting Array".format(lighting))
     print("")
 
 
 # capture image from camera and save to file
-def capture_image(path):
-    filename = strftime('%Y%m%d%@H%-M%-S') + ".jpg"
-    CAMERA.capture(path + filename)
-    print("\n[CAMERA] " + path + filename + "\n")
+def capture_image(path, tag, timestamp):
+    filename = strftime('%Y%m%d-%H%M-%S') + ".jpg"
+    CAMERA.capture("{}{}-{}".format(path, tag, filename))
+    print("\n[CAMERA] ### {} {}: {}\n".format(tag, timestamp, filename))
     flush_event(CAMERA_SWITCH)
 
 
