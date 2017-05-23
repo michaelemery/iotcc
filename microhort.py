@@ -29,17 +29,19 @@ import data_log_request
 from time import strftime
 from datetime import datetime
 from picamera import PiCamera
+import requests
 
 
 # --- SET GLOBAL CONSTANTS ---
-
-# connection
-CONN = mysql.connector.connect(
-    user='iotcc_user',
-    password='158335danish',
-    host='iotcc-db-instance.cqmmjgzwow7o.us-west-2.rds.amazonaws.com',
-    database='microhort')
-CURSOR = CONN.cursor()
+SERVER = "http://ec2-54-70-146-220.us-west-2.compute.amazonaws.com"
+# TODO - replace this with microhort.com
+# # connection
+# CONN = mysql.connector.connect(
+#     user='iotcc_user',
+#     password='158335danish',
+#     host='iotcc-db-instance.cqmmjgzwow7o.us-west-2.rds.amazonaws.com',
+#     database='microhort')
+# CURSOR = CONN.cursor()
 
 # hardware info
 HT_SENSOR_MODEL = Adafruit_DHT.DHT22
@@ -114,18 +116,33 @@ def main():
 
 
 # configure application with all start-up information
+# def init():
+#     hub = get_hub(get_mac('eth0'))
+#     config = {
+#         'hub': hub,
+#         'controller_type': get_controller_types(),
+#         'controller': get_controllers(hub['hub_id']),
+#         'sensor_type': get_sensor_types(),
+#         'sensor': get_sensors(hub['hub_id']),
+#         'profile': get_profile(hub['hub_profile_id']),
+#         'profile_sensor': get_profile_sensor(hub['hub_profile_id']),
+#         'lighting_gpio': get_lighting(hub['hub_profile_id'])
+#     }
+#     show_config(config)
+#     write_config(config, JSON_FILE)
+#     print("\nRunning (ctrl-c to abort)\n")
+#     return config
+
+
+# configure application with all start-up information
 def init():
-    hub = get_hub(get_mac('eth0'))
-    config = {
-        'hub': hub,
-        'controller_type': get_controller_types(),
-        'controller': get_controllers(hub['hub_id']),
-        'sensor_type': get_sensor_types(),
-        'sensor': get_sensors(hub['hub_id']),
-        'profile': get_profile(hub['hub_profile_id']),
-        'profile_sensor': get_profile_sensor(hub['hub_profile_id']),
-        'lighting_gpio': get_lighting(hub['hub_profile_id'])
-    }
+    mac = get_mac('eth0')
+    # send HTTP GET to retrieve hub information	
+    url = SERVER + "/getconfig"
+    params = {"mac":str(mac)}
+    resp = requests.get(url=url, params=params)
+    print(resp)
+    config = convertMicroHortDictionary(json.loads(resp.text))
     show_config(config)
     write_config(config, JSON_FILE)
     print("\nRunning (ctrl-c to abort)\n")
@@ -368,9 +385,9 @@ def get_profile_sensor(hub_profile_id):
         "SELECT profile_sensor_id, profile_id, sensor_type_id, profile_sensor_low, profile_sensor_high "
         "FROM profile_sensor "
         "WHERE profile_id "
-        "LIKE %s"
+        "LIKE ({})".format(str(hub_profile_id))
     )
-    CURSOR.execute(query, str(hub_profile_id))
+    CURSOR.execute(query)
     profile_sensor = {}
     for profile_sensor_id, profile_id, sensor_type_id, profile_sensor_low, profile_sensor_high in CURSOR:
         profile_sensor.update({
@@ -444,7 +461,7 @@ def write_config(config, filename):
 # read configuration data from file
 def read_config(filename):
     with open(filename, 'r') as f:
-        config = json.load(f)
+        config = ConvertMicroHortDictionary(json.load(f))
     return config
 
 
@@ -454,12 +471,29 @@ def flush_event(gpio):
     GPIO.event_detected(gpio)
 
 
+# Convert the JSON to work a PY dict with int keys.
+# This makes any keys that are int+strings become ints.
+# if something is broken loading from read_config(), it could definitely be this code.
+def convertIfDigit(dictionary):
+    for k in dictionary:
+        if (type(k) is str or type(k) is unicode) and k.isdigit():
+            dictionary[int(k)] = dictionary.pop(k)
+    return dictionary
+
+def convertMicroHortDictionary(dictionary):
+    if type(dictionary) is not dict:
+        return
+    for k in dictionary:
+        if type(dictionary[k]) is dict:
+            convertIfDigit(dictionary[k])
+            convertMicroHortDictionary(dictionary[k])
+    return dictionary
+
+
 if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
         pass
     finally:
-        CURSOR.close()
-        CONN.close()
-        GPIO.cleanup()
+        pass
