@@ -1,59 +1,62 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from flask import Flask, request, jsonify, make_response, render_template, flash, url_for, redirect
+from flask import Flask, request, jsonify, make_response, render_template, flash, url_for, redirect, session, abort
 import mysql.connector
 import json
 import platform
+from wtforms import Form, BooleanField, TextField, PasswordField, validators
+from MySQLdb import escape_string as thwart
+from functools import wraps
+import gc
 
 # TODO - make sure to remove sensitive info from Exceptions & turn debug mode off!
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '158335microhort' 
 
+
+########################################################################################################
+# Decorators
+########################################################################################################
+
+## TO USE LOGIN_REQUIRED
+# place annotation below the route declaration
+# @app.route("/logout")
+# @login_required
+
+def login_required(f): # decorator wraps the function. it runs wrap() first, to see if the user has a "logged_in" session in cookies.
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if "logged_in" in session:
+            return f(*args, **kwargs) #arguments and keyword arguments.
+        else:
+            flash("You need to log in to view this.")
+            #currently just redirects to login page. no reference to previous page...
+            return redirect(url_for('loginPage'))
+    return wrap
+
+
+#opposite of the above decorator. User must be logged out.
+def logged_out_required(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if "logged_in" in session:
+            flash("You can't do that.")
+            return redirect(url_for('homePage'))
+        else:
+            return f(*args, **kwargs) #arguments and keyword arguments.
+    return wrap
+
 @app.route('/')
-def homepage():
+def homePage():
     # version = platform.python_version()
     # return '158335 MicroHort project. Running on python' + version
-    flash('User notify from __init_.py')
     return render_template("main.html") #template renders from /templates/ 
 
-
-########################################################################################################
-# USER MANAGEMENT
-########################################################################################################
-
-@app.route('/login/', methods=["POST", "GET"])
-def loginPage():
-    error = ""
-    try:
-        if request.method == "POST":
-            attempted_username = request.form["username"]
-            attempted_password = request.form["password"]  
-            flash(attempted_username)
-            flash(attempted_password)
-            #check username in db, and hashed password. Compare with 
-            if attempted_username == "admin" and attempted_password == "password":
-                return redirect(url_for('dashboardPage'))
-            else:
-                flash("INVALID LOGIN")
-                error = "Invalid login. Try Again."
-        return render_template("login.html", error=error) #fallthrough covers GET aswell.
-    except Exception as e:
-
-        # TODO - this needs to be changed to allow less information.
-        flash(str(e))
-        return render_template("login.html", error=error)
-    return ""
-
-
-@app.route('/register/')
-def registerPage():
-    return render_template("register.html")
-
 @app.route('/dashboard/')
-def dashboardPage():
+@login_required
+def dashBoardPage():
     return render_template("dashboard.html")
-
 
 @app.route('/testjsonresponse/')
 def testJsonResponse():
@@ -62,7 +65,7 @@ def testJsonResponse():
         return jsonify(**test)
     else:
         return 'Method not recognized'
-        
+  
 @app.route('/querydb')
 def querydb():
     connection, cursor = getDbCursor()
@@ -295,6 +298,149 @@ def get_lighting(hub_profile_id, cursor):
     return lighting
 
 ########################################################################################################
+# User registration classes
+########################################################################################################
+
+# @app.route('/login/', methods=["POST", "GET"])
+# def loginPage():
+#     error = ""
+#     try:
+#         if request.method == "POST":
+#             attempted_username = request.form["username"]
+#             attempted_password = request.form["password"]  
+#             flash(attempted_username)
+#             flash(attempted_password)
+#             #check username in db, and hashed password. Compare with 
+#             if attempted_username == "admin" and attempted_password == "password":
+#                 return redirect(url_for('dashBoardPage'))
+#             else:
+#                 flash("INVALID LOGIN")
+#                 error = "Invalid login. Try Again."
+#         return render_template("login.html", error=error) #fallthrough covers GET aswell.
+#     except Exception as e:
+
+#         # TODO - this needs to be changed to allow less information.
+#         flash(str(e))
+#         return render_template("login.html", error=error)
+#     return ""
+
+@app.route('/login/', methods=["POST", "GET"])
+@logged_out_required
+def loginPage():
+    error = ""
+    try:
+        if request.method == "POST":
+            username = request.form["username"]
+            password = request.form["password"]
+            conn,cursor = getDbCursor()
+            query = 'SELECT * FROM users WHERE username = %s'
+            cursor.execute(query, (username,))
+            result = cursor.fetchone()
+            if (result is not None and result[2] == password):
+                session['logged_in'] = True
+                session['username'] = username
+                flash("Welcome " + username + " you are now logged in.")
+                gc.collect()
+                conn.close()
+                return redirect(url_for('dashBoardPage'))
+            #verification failed. falls through to here.
+            flash("INVALID LOGIN")
+            error = "Invalid login. Try Again."
+            gc.collect()
+            conn.close()
+        return render_template("login.html", error=error) #fallthrough covers GET aswell.
+    except Exception as e:
+        # TODO - this needs to be changed to allow less information.
+        flash(str(e))
+        return render_template("login.html", error=error)
+
+class RegistrationForm(Form):
+    username = TextField('Username', [validators.Length(min=4, max=20)])
+    email = TextField('Email Address', [validators.Length(min=6, max=50)])
+    password = PasswordField('New Password', [
+        validators.Required(),
+        validators.EqualTo('confirm', message='Passwords must match')
+    ])
+    confirm = PasswordField('Repeat Password')
+
+@app.route('/register/', methods=["GET","POST"])
+@logged_out_required
+def registerPage():
+    form = RegistrationForm(request.form)
+    if request.method == "POST" and form.validate():
+        username = form.username.data
+        email = form.email.data
+        password = form.password.data
+        conn,cursor = getDbCursor()
+        print("username " + username)
+        query = 'SELECT * FROM users WHERE username = %s'
+        cursor.execute(query, (username,))
+        if cursor.fetchone() is not None:
+            flash("Sorry that username is already taken.")
+            gc.collect()
+            conn.close()
+            return render_template("register.html", form=form)
+        else: 
+            query = """INSERT INTO users (username, password, email) VALUES (%s, %s, %s)"""
+            cursor.execute(query, (username, password, email,))
+            conn.commit()
+            conn.close()
+            gc.collect()
+            session['logged_in'] = True
+            session['username'] = username
+            return redirect(url_for('dashBoardPage'))
+    return render_template("register.html", form=form)
+
+@app.route("/logout")
+@login_required
+def logout():
+    session.clear() # removes all cookies.
+    flash("You have been logged out")
+    gc.collect()
+    return redirect(url_for("homePage"))
+
+
+@app.route("/manage")
+@login_required
+def manage():
+    return (session["username"])
+
+
+
+    # try:
+    #     form = RegistrationForm(request.form)
+    #     if request.method == "POST" and form.validate():
+    #         username  = form.username.data
+    #         email = form.email.data
+    #         password = form.password.data
+    #         conn, c = getDbCursor()
+    #         x = c.execute("SELECT * FROM users WHERE username = '{}'".format(thwart(username)))
+
+    #         if int(x) > 0:
+    #             flash("That username is already taken, please choose another")
+    #             return render_template('register.html', form=form)
+
+    #         else:
+    #             query = """INSERT INTO users (username, password, email) VALUES (%s, %s, %s)"""
+    #             c.execute(query, (thwart(username), thwart(password), thwart(email),))
+                
+    #             conn.commit()
+    #             flash("Thanks for registering!")
+    #             c.close()
+    #             conn.close()
+    #             gc.collect()
+
+    #             session['logged_in'] = True
+    #             session['username'] = username
+
+    #             return redirect(url_for('dashBoard'))
+
+    #     return render_template("register.html", form=form)
+
+    # except Exception as e:
+    #     return(str(e))
+
+########################################################################################################
 # Error handling
 ########################################################################################################
 
@@ -306,18 +452,18 @@ def pageNotFound(e):
 # HTTP Modifiers
 ########################################################################################################
 
-@app.after_request
-def addHeader(r):
-    """
-....Modify the headers to tell the browser to not cache any content
-....for any response.
-...."""
+# @app.after_request
+# def addHeader(r):
+#     """
+# ....Modify the headers to tell the browser to not cache any content
+# ....for any response.
+# ...."""
 
-    r.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-    r.headers['Pragma'] = 'no-cache'
-    r.headers['Expires'] = '0'
-    r.headers['Cache-Control'] = 'public, max-age=0'
-    return r
+#     r.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+#     r.headers['Pragma'] = 'no-cache'
+#     r.headers['Expires'] = '0'
+#     r.headers['Cache-Control'] = 'public, max-age=0'
+#     return r
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

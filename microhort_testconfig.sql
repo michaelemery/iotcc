@@ -4,6 +4,14 @@ CREATE DATABASE microhort;
 
 USE microhort;
 
+CREATE TABLE users (
+    uid INT(11) AUTO_INCREMENT PRIMARY KEY, 
+    username VARCHAR(20), 
+    password VARCHAR(100), 
+    email VARCHAR(50), 
+    settings VARCHAR(32500), 
+);
+
 CREATE TABLE owner (
     owner_id INT AUTO_INCREMENT PRIMARY KEY,
     owner_email VARCHAR(128) UNIQUE,
