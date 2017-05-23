@@ -89,7 +89,7 @@ def main():
     while True:
         config = init()
         previous_capture_date = '1970-01-01'
-        GPIO.output(CONFIG_LED, GPIO_OFF)
+        GPIO.output(CONFIG_LED, GPIO_ON)
         lighting_state = LIGHTING_OFF
         switch_lights(lighting_state, config['lighting_gpio'], 'SYSTEM START')
         previous_sensor_type_states = init_sensor_type_states(config['sensor'])
@@ -204,7 +204,7 @@ def signal_event(sensor_type_state, sensor_type_id, config):
     )
     print("\n[SENSOR] {}\n".format(event_message))
     event_entry = {
-        'event_dtg:': datetime.now(),
+        'event_dtg:': str(datetime.now()),
         'event_hub_id': config['hub']['hub_id'],
         'event_profile_id': config['hub']['hub_profile_id'],
         'event_sensor_type_id': sensor_type_id,
@@ -212,7 +212,7 @@ def signal_event(sensor_type_state, sensor_type_id, config):
         'event_message': event_message
     }
     append_event(event_entry)
-    action_controller(event_entry, config['controller_type'], config['controller'])
+    action_controller(event_entry, config['controller_type'], config['controller'], config['sensor_type'])
 
 
 # toggles lighting as required for profile and returns state of profile lighting
@@ -221,10 +221,10 @@ def set_profile_lighting(lighting_gpio, lighting_profile, lighting_state):
     time_on = lighting_profile['profile_lighting_on']
     time_off = lighting_profile['profile_lighting_off']
     if time_on <= current_time < time_off and lighting_state == LIGHTING_OFF:
-        switch_lights(LIGHTING_ON, lighting_gpio, time_on)
+        switch_lights(LIGHTING_ON, lighting_gpio, current_time)
         lighting_state = LIGHTING_ON
     elif time_off <= current_time and lighting_state == LIGHTING_ON:
-        switch_lights(LIGHTING_OFF, lighting_gpio, time_off)
+        switch_lights(LIGHTING_OFF, lighting_gpio, current_time)
         lighting_state = LIGHTING_OFF
     return lighting_state
 
@@ -243,13 +243,22 @@ def switch_lights(lights_are_on, lighting_gpio, message):
 
 # writes an entry in the event log
 def append_event(event_entry):
-    #data_log_request.http_request(event_entry)
+    data_log_request.http_request(event_entry)
     pass
 
 
 # stabilises the profile when in a non-stable event state
-def action_controller(event_entry, controller_type, controller):
-    pass
+def action_controller(event_entry, controller_type, controller, sensor_type):
+    sensor_type_id = event_entry['event_sensor_type_id']
+    event_state = event_entry['event_state']
+    # controller_type_id = controller_type['controller_type_id']
+    if event_state is HIGH:
+        controller = sensor_type[sensor_type_id]['sensor_type_high_controller_type_id']
+    elif event_state is LOW:
+        controller = sensor_type[sensor_type_id]['sensor_type_low_controller_type_id']
+    elif event_state is STABLE:
+        # turn everything off
+        pass
 
 
 # return mac address of interface

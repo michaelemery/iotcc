@@ -1,9 +1,11 @@
+#!/usr/bin/env python
+
 from socket import *
 import json
 from datetime import datetime
 
-
 def http_request(event_entry):
+
     message = json.dumps(event_entry)
 
     print ("message is: "+message)
@@ -30,7 +32,7 @@ def http_request(event_entry):
         # For print the response
         print('From Server:', response)
         clientSocket.close()
-    except ConnectionRefusedError:
+    except: #ConnectionRefusedError:
         response = "408 request timed out"
     if '200' not in str(response):
 
@@ -68,13 +70,13 @@ def http_request(event_entry):
             return "The event has been logged successfully"
 
 
-# print ("starting request")
-# event_entry = {
-#         'event_dtg:': str(datetime.now()),
-#         'event_hub_id': 'id number 3',
-#         'event_profile_id': 'hub profile 3',
-#         'event_sensor_type_id': 'sensor 3',
-#         'event_state': 'event 3',
-#         'event_message': 'too hot'
-#     }
-# http_request(event_entry)
+print ("starting request")
+event_entry = {
+        'event_dtg:': str(datetime.now()),
+        'event_hub_id': 'id number 3',
+        'event_profile_id': 'hub profile 3',
+        'event_sensor_type_id': 'sensor 3',
+        'event_state': 'event 3',
+        'event_message': 'too hot'
+    }
+http_request(event_entry)
