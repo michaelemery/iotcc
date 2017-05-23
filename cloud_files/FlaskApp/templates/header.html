@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    {% block title %}{% endblock %}
+    <meta
+    name="viewport" content="width=device-width, initial-scale=1">
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+   <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='jss/bootstrap.min.js') }}" rel="shortcut icon">
+</head>
+
+<header class="container">
+<h1 class="text-center"> Microhort </h1>
+<hr>
+</header>
+
+<body>
+<div class="container" style="min-height:100%; width:80%">
+    <!-- get any flash() calls made from the python script -->
+    <!-- these will display at the top of the body, below the header. -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    {{message}}
+                </div> <!-- alert-info is blue -->
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <!-- body replacement happens here! -->
+    {% block body %} {% endblock %}
+</div>
+
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+</body>
+
+</html>
