@@ -1,0 +1,22 @@
+{% extends "header.html" %}
+
+{%block title%}
+<title>Microhort!</title>
+{% endblock %}
+
+{% block body %}
+<body>
+    <!-- Main component for a primary marketing message or call to action -->
+    <div class="jumbotron text-center">
+        <h1>Welcome to Microhort</h1>
+        <img class="img-responsive limit_image_height_home" src="/static/images/plant_in_jar.svg" alt="Plant in a jar">
+        <p>Microhort is an Internet Of Things(IoT) device that... </p>
+        {% if session.logged_in %}
+        <a class="btn btn-lg btn-primary" href="/dashboard" role="button">Dashboard</a>
+        {% else %}
+        <a class="btn btn-lg btn-primary" href="/login" role="button">Login</a>
+        <a class="btn btn-lg btn-primary" href="/register" role="button">Register</a>
+        {% endif %}
+    </div> 
+</body>
+{% endblock %}

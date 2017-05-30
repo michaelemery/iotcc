@@ -1,0 +1,35 @@
+{% extends "header.html" %}
+
+{%block title%}
+<title>Modify plant profile for {{ session.environment_name }}</title>
+{% endblock %}
+
+{% block body %}
+<body>
+    <div class = "row display-flex">
+        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+            <div class="jumbotron">
+                <span class="text-center environment_name_space"><h2>Update plant profile for</h2> <h1>{{ session.environment_name }} </h1>  </span>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h3> Current Profile: <b> {{ session.current_profile }} </b> </h3></div>
+                </div>
+
+                <div class="panel panel-success">
+                    <div class="panel-heading"><h3>Select new Plant Profile</h3></div>
+                    <div class="panel-body">
+                        <div class="list-group">
+                            {% for profile_id,profile_name in profiles.items() %}
+                            <a href="/selectplantprofile?pid={{ profile_id }}" class="list-group-item"> {{ profile_name }} <small><span class="glyphicon glyphicon-refresh small" style="color:green"></small></span></span></a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+
+
+{% endblock %}

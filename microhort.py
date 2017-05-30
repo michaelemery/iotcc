@@ -86,6 +86,9 @@ CAPTURE_TIME = '12:00'
 
 
 def main():
+
+    capture_image(IMAGE_PATH, "STARTUP", strftime('%Y-%m-%d'))
+    
     while True:
         config = init()
         previous_capture_date = '1970-01-01'
@@ -245,7 +248,6 @@ def switch_lights(lights_are_on, lighting_gpio, message):
 def append_event(event_entry):
     data_log_request.http_request(event_entry)
     pass
-
 
 # stabilises the profile when in a non-stable event state
 def action_controller(event_entry, controller_type, controller, sensor_type):
@@ -455,10 +457,28 @@ def show_config(config):
 
 # capture image from camera and save to file
 def capture_image(path, tag, timestamp):
-    filename = strftime('%Y%m%d-%H%M-%S') + ".jpg"
-    CAMERA.capture("{}{}-{}".format(path, tag, filename))
+    filename = tag + "-" + strftime('%Y%m%d-%H%M-%S') + ".jpg"
+    full_path = "{}{}".format(path, filename)
+    CAMERA.capture(full_path)
     print("\n[CAMERA] ### {} {}: {}\n".format(tag, timestamp, filename))
     flush_event(CAMERA_SWITCH)
+    #upload to server/s3
+    send_image_to_server(full_path, filename)
+
+
+def send_image_to_server(full_path, filename):
+    """ 
+    Function uploads a file(image) the microhort.com server.
+    It outputs a 'success' message to the console if it succeeds.
+    """
+    print("SENDING TO SERVER")
+    url = SERVER + '/imageupload'
+    mac = get_mac('eth0')
+    files={'file': open(full_path,'rb')}
+    values={'filename' : filename, 'mac' : str(mac)}
+    r=requests.post(url,files=files,data=values)
+    print("RECIEVED FROM SERVER")
+    print("PIC UPLOAD SERVER MESSAGE: " + r.text)
 
 
 # write configuration data to file

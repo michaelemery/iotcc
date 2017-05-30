@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    {% block title %}{% endblock %}
+    <meta
+    name="viewport" content="width=device-width, initial-scale=1">
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='favicon.ico') }}" rel="shortcut icon">
+</head>
+
+<header>
+ <div class="container">
+      <!-- Static navbar -->
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Microhort</a>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              <li><a href="/"> Home </a></li>
+              <li><a href="/shop"> Shop </a></li>
+              <li><a href="http://www.fire.org.nz/"> Support </a></li>
+              {% if session.logged_in %}
+                <li><a href="/dashboard"> Dashboard <span class="glyphicon glyphicon-list-alt"></span></a></li>
+              {% endif %}
+            </ul>
+          <ul class="nav navbar-nav navbar-right">
+                <li><a href="/shop"><span class="glyphicon glyphicon-shopping-cart"></span> Cart </a></li>
+          {% if session.logged_in %}
+                <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><b>Logged in as: {{ session.username }}</b><span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <li><a href="/dashboard">Dashboard <span class="glyphicon glyphicon-list-alt"></span></a></li>
+                  <!--<li><a href="/newdevice">Add a New Environment</a></li>
+                  <li><a href="/viewdevices">View Environments</a></li>-->
+                  <li role="separator" class="divider"></li>
+                  <li><a href="/logout">Logout</a></li>
+                </ul>
+                </li>
+         {% else %}
+                <li> <a href="/login"><b>Login</b></a> </li>
+                <li> <a href="/register"><b>Register</b></a> </li>
+                    <!-- session does NOT need to be imported into the template or used as an argument. -->
+         {% endif %}
+          </ul>
+
+        </div><!--/.nav-collapse -->
+        </div><!--/.container-fluid -->
+      </nav>
+    </div> <!-- /container -->
+</header>
+
+<div class="container">
+    <!-- get any flash() calls made from the python script -->
+    <!-- these will display at the top of the body, below the header. -->
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            {% for category, message in messages %}
+
+                {% if category == "error" %}
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                   <h3> {{message}} </h3>
+                </div>
+                {% elif category == "danger" %}
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h3>{{message}}</h3>
+                </div>
+                {% elif category == "success" %}
+                <div class="alert alert-success alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                   <h3> {{message}}</h3>
+                </div>
+                {% else %}
+                <div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h3>{{message}}</h3>
+                </div> <!-- alert-info is blue -->
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+<div class= "container">
+    <!-- body replacement happens here! -->
+    {% block body %} {% endblock %}
+</div>
+
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+</html>
