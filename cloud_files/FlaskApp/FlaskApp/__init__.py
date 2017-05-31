@@ -10,6 +10,7 @@ from functools import wraps
 import gc
 import botoupload
 
+
 # TODO - make sure to remove sensitive info from Exceptions & turn debug mode off!
 
 app = Flask(__name__)
@@ -325,7 +326,7 @@ def deleteSensor():
 
 @app.route('/removecontroller', methods=["POST"])
 @login_required
-@hid_required
+@hid_required 
 def deleteController():
     # retrieve information
     hid = session["hid"]
@@ -738,33 +739,6 @@ def get_lighting(hub_profile_id, cursor):
         lighting.append(lighting_gpio)
     return lighting
 
-########################################################################################################
-# User registration classes
-########################################################################################################
-
-# @app.route('/login/', methods=["POST", "GET"])
-# def loginPage():
-#     error = ""
-#     try:
-#         if request.method == "POST":
-#             attempted_username = request.form["username"]
-#             attempted_password = request.form["password"]  
-#             flash(attempted_username)
-#             flash(attempted_password)
-#             #check username in db, and hashed password. Compare with 
-#             if attempted_username == "admin" and attempted_password == "password":
-#                 return redirect(url_for('dashBoardPage'))
-#             else:
-#                 flash("INVALID LOGIN")
-#                 error = "Invalid login. Try Again."
-#         return render_template("login.html", error=error) #fallthrough covers GET aswell.
-#     except Exception as e:
-
-#         # TODO - this needs to be changed to allow less information.
-#         flash(str(e))
-#         return render_template("login.html", error=error)
-#     return ""
-
 @app.route('/login/', methods=["POST", "GET"])
 @logged_out_required
 def loginPage():
@@ -859,46 +833,6 @@ def logout():
     return redirect(url_for("homePage"))
 
 
-@app.route("/manage")
-@login_required
-def manage():
-    return (session["username"])
-
-
-
-    # try:
-    #     form = RegistrationForm(request.form)
-    #     if request.method == "POST" and form.validate():
-    #         username  = form.username.data
-    #         email = form.email.data
-    #         password = form.password.data
-    #         conn, c = getDbCursor()
-    #         x = c.execute("SELECT * FROM users WHERE username = '{}'".format(thwart(username)))
-
-    #         if int(x) > 0:
-    #             flash("That username is already taken, please choose another")
-    #             return render_template('register.html', form=form)
-
-    #         else:
-    #             query = """INSERT INTO users (username, password, email) VALUES (%s, %s, %s)"""
-    #             c.execute(query, (thwart(username), thwart(password), thwart(email),))
-                
-    #             conn.commit()
-    #             flash("Thanks for registering!")
-    #             c.close()
-    #             conn.close()
-    #             gc.collect()
-
-    #             session['logged_in'] = True
-    #             session['username'] = username
-
-    #             return redirect(url_for('dashBoard'))
-
-    #     return render_template("register.html", form=form)
-
-    # except Exception as e:
-    #     return(str(e))
-
 
 ########################################################################################################
 # HTTP REST picutres
@@ -912,6 +846,7 @@ def imageUpload():
 
     f = request.files['file']
     filename = request.form['filename']
+    description = request.form['description']
     mac = request.form['mac']
 
     #upload the file to s3 bucket
@@ -935,15 +870,79 @@ def imageUpload():
     link = S3_BUCKET_URL + filename
     # save to pictures table.
     query = (
-        "INSERT INTO pictures (hub_id,link) "
-        "VALUES (%s, %s)"
+        "INSERT INTO pictures (hub_id,link,description) "
+        "VALUES (%s, %s, %s)"
     )
-    cursor.execute(query, (hub_id, link))
+    cursor.execute(query, (hub_id, link, description))
     connection.commit()
     cleanUpDb(connection,cursor)
     gc.collect()
     # return a success message.
     return ("success")
+
+@app.route('/viewpictures')
+# @login_required
+# @hid_required
+def viewPictures():
+    #get the user's selected hub
+    hid = session["hid"]
+    #retrieve the picture links for all the files.
+    # -- store these inside of a list.
+
+    # remove the sensor from the sensors table
+    connection, cursor = getDbCursor()
+    query = (
+        "SELECT link, description "
+        "FROM pictures "
+        "WHERE hub_id = %s"
+    )
+    cursor.execute(query, (hid,))
+
+    results = []
+
+    for link, desc in cursor:
+        results.append((link,desc))
+
+    cleanUpDb(connection, cursor)
+    gc.collect()
+    #embed the pictures into the page
+
+    # test data (overrides DB call...)
+    # results = [("https://www.w3schools.com//w3images/lights.jpg", "1"), ("https://www.w3schools.com//w3images/lights.jpg", "2"),("https://www.w3schools.com//w3images/lights.jpg", "3"),("https://www.w3schools.com//w3images/lights.jpg", "4"),("https://www.w3schools.com//w3images/lights.jpg", "5")]
+
+    environment_name = session["environment_name"] 
+    is_results = True
+    if len(results) == 0:
+        is_results = False
+    print(is_results)
+
+    return render_template("viewpictures.html", environment_name=environment_name, pictures=results, is_results=str(is_results))
+
+########################################################################################################
+# DATA LOG ACCESS
+########################################################################################################
+@app.route('/submitdatalog', methods=['POST'])
+def dataLog():
+
+    log = request.form['log']
+    log_dict = json.loads(log)
+    # event_id, event_dtg, event_hub_id, event_profile_id, event_sensor_type_id, event_state, event_message
+
+
+    # #save the file to the database
+    connection, cursor = getDbCursor()
+
+    query = (
+        "INSERT INTO event (event_dtg, event_hub_id, event_profile_id, event_sensor_type_id, event_state, event_message) "
+        "VALUES (%s, %s, %s, %s, %s, %s)"
+    )
+    cursor.execute(query, (str(log_dict["event_dtg"]), str(log_dict["event_hub_id"]), str(log_dict["event_profile_id"]), str(log_dict["event_sensor_type_id"]), str(log_dict["event_state"]), str(log_dict["event_message"])))
+    connection.commit()
+    cleanUpDb(connection,cursor)
+
+    return success
+
+
 
 ########################################################################################################
 # Error & access handling
