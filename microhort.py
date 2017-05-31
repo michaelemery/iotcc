@@ -33,7 +33,7 @@ import requests
 
 
 # --- SET GLOBAL CONSTANTS ---
-SERVER = "http://ec2-54-70-146-220.us-west-2.compute.amazonaws.com"
+SERVER = "http://microhort.com"
 # TODO - replace this with microhort.com
 # # connection
 # CONN = mysql.connector.connect(
@@ -246,8 +246,7 @@ def switch_lights(lights_are_on, lighting_gpio, message):
 
 # writes an entry in the event log
 def append_event(event_entry):
-    data_log_request.http_request(event_entry)
-    pass
+    data_log_request.http_request(event_entry, config['hub']['hub_id'])
 
 # stabilises the profile when in a non-stable event state
 def action_controller(event_entry, controller_type, controller, sensor_type):
@@ -457,16 +456,17 @@ def show_config(config):
 
 # capture image from camera and save to file
 def capture_image(path, tag, timestamp):
-    filename = tag + "-" + strftime('%Y%m%d-%H%M-%S') + ".jpg"
+    description = tag + "-" + strftime('%Y%m%d-%H%M-%S')
+    filename = description + ".jpg"
     full_path = "{}{}".format(path, filename)
     CAMERA.capture(full_path)
     print("\n[CAMERA] ### {} {}: {}\n".format(tag, timestamp, filename))
     flush_event(CAMERA_SWITCH)
     #upload to server/s3
-    send_image_to_server(full_path, filename)
+    send_image_to_server(full_path, filename, description)
 
 
-def send_image_to_server(full_path, filename):
+def send_image_to_server(full_path, filename, description):
     """ 
     Function uploads a file(image) the microhort.com server.
     It outputs a 'success' message to the console if it succeeds.
@@ -475,7 +475,7 @@ def send_image_to_server(full_path, filename):
     url = SERVER + '/imageupload'
     mac = get_mac('eth0')
     files={'file': open(full_path,'rb')}
-    values={'filename' : filename, 'mac' : str(mac)}
+    values={'filename' : filename, 'mac' : str(mac), 'description': str(description)}
     r=requests.post(url,files=files,data=values)
     print("RECIEVED FROM SERVER")
     print("PIC UPLOAD SERVER MESSAGE: " + r.text)
