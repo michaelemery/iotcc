@@ -89,8 +89,11 @@ def main():
 
     capture_image(IMAGE_PATH, "STARTUP", strftime('%Y-%m-%d'))
     
+
+
     while True:
         config = init()
+
         previous_capture_date = '1970-01-01'
         GPIO.output(CONFIG_LED, GPIO_ON)
         lighting_state = LIGHTING_OFF
@@ -101,6 +104,7 @@ def main():
                 copy.deepcopy(previous_sensor_type_states), config['sensor'], config['profile_sensor']
             )
             for sensor_type_id in sensor_type_states:
+                print ("TRYING")
                 if sensor_type_states[sensor_type_id] != previous_sensor_type_states[sensor_type_id]:
                     previous_sensor_type_states[sensor_type_id] = init_sensor_type_states(config['sensor'])
                     signal_event(sensor_type_states, sensor_type_id, config)
@@ -207,7 +211,7 @@ def signal_event(sensor_type_state, sensor_type_id, config):
     )
     print("\n[SENSOR] {}\n".format(event_message))
     event_entry = {
-        'event_dtg:': str(datetime.now()),
+        'event_dtg': str(datetime.now()),
         'event_hub_id': config['hub']['hub_id'],
         'event_profile_id': config['hub']['hub_profile_id'],
         'event_sensor_type_id': sensor_type_id,
@@ -246,7 +250,7 @@ def switch_lights(lights_are_on, lighting_gpio, message):
 
 # writes an entry in the event log
 def append_event(event_entry):
-    data_log_request.http_request(event_entry, config['hub']['hub_id'])
+    data_log_request.http_request2(event_entry)
 
 # stabilises the profile when in a non-stable event state
 def action_controller(event_entry, controller_type, controller, sensor_type):
