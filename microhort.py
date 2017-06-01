@@ -134,7 +134,6 @@ def main():
                 copy.deepcopy(previous_sensor_type_states), config['sensor'], config['profile_sensor']
             )
             for sensor_type_id in sensor_type_states:
-                print ("TRYING")
                 if sensor_type_states[sensor_type_id] != previous_sensor_type_states[sensor_type_id]:
                     previous_sensor_type_states[sensor_type_id] = init_sensor_type_states(config['sensor'])
                     signal_event(sensor_type_states, sensor_type_id, config)
