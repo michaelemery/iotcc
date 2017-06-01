@@ -30,7 +30,7 @@ from time import strftime
 from datetime import datetime
 from picamera import PiCamera
 import requests
-
+from threading import Thread
 
 # --- SET GLOBAL CONSTANTS ---
 SERVER = "http://microhort.com"
@@ -73,6 +73,9 @@ LOW = -1
 STABLE = 0
 HIGH = 1
 
+# current event threads
+controllers = {}
+
 # set lighting constants
 LIGHTING_ON = True
 LIGHTING_OFF = False
@@ -83,6 +86,33 @@ IMAGE_PATH = '/home/' + os.environ['SUDO_USER'] + '/microhort/image/'
 
 # set daily image capture-time constant
 CAPTURE_TIME = '12:00'
+
+
+class eventThread(Thread):
+    def __init__(self, max_run_time, min_rest_time, gpio):
+        self.stopped = False
+        self.max_run_time = max_run_time
+        self.min_rest_time = min_rest_time
+        self.gpio = gpio
+        self.gpio_status = 'low'
+        Thread.__init__(self) # Call the super construcor (Thread's one)
+
+    def run(self):
+        while not self.stopped:
+            GPIO.output(int(self.gpio), GPIO.HIGH)
+            self.gpio_status = 'high'
+            # print (self.gpio_status)
+            time.sleep(self.max_run_time)
+            GPIO.output(int(self.gpio), GPIO.LOW)
+            self.gpio_status = 'low'
+            # print (self.gpio_status)
+            time.sleep(self.min_rest_time)
+
+    def stop(self):
+        GPIO.output(int(self.gpio), GPIO.LOW)
+        self.gpio_status = 'low'
+        print ('thread stopped')
+        self.stopped = True
 
 
 def main():
@@ -252,18 +282,72 @@ def switch_lights(lights_are_on, lighting_gpio, message):
 def append_event(event_entry):
     data_log_request.http_request2(event_entry)
 
+
 # stabilises the profile when in a non-stable event state
 def action_controller(event_entry, controller_type, controller, sensor_type):
     sensor_type_id = event_entry['event_sensor_type_id']
     event_state = event_entry['event_state']
-    # controller_type_id = controller_type['controller_type_id']
+    event_type = sensor_type[sensor_type_id]['sensor_type_name']
+
+    global controllers
+
+    #getting the appropriate gpio
+    gpio = controller[sensor_type[sensor_type_id]['sensor_type_high_controller_type_id']]['controller_gpio']
+    # print ('gpio is', gpio)
+
     if event_state is HIGH:
+        try:
+            #stop the thread currently bound to event_type
+            thread = controllers[event_type]
+            thread.stop()
+            print(controllers[event_type])
+        except KeyError:
+            pass
+        #bind a new timer to event_type
         controller = sensor_type[sensor_type_id]['sensor_type_high_controller_type_id']
+        # print ('controller', controller, 'high')
+        thread_maxruntime = controller_type[controller]['controller_type_max_run_time']
+        # print (thread_maxruntime)
+        thread_minresttime = controller_type[controller]['controller_type_min_rest_time']
+        # print (thread_minresttime)
+        event_thread = eventThread(thread_maxruntime, thread_minresttime, gpio)
+        controllers[event_type]= event_thread
+        #print (controllers)
+        event_thread.start()
     elif event_state is LOW:
+        try:
+            #stop the thread currently bound to event_type
+            thread = controllers[event_type]
+            thread.stop()
+            print(controllers[event_type])
+        except KeyError:
+            pass
+        #bind a new timer to event_type
         controller = sensor_type[sensor_type_id]['sensor_type_low_controller_type_id']
+        # print ('controller', controller, 'low')
+        # print ('max runtime',controller_type[controller]['controller_type_max_run_time'])
+        # print ('min resttime',controller_type[controller]['controller_type_min_rest_time'])
+        #bind a new timer to event_type
+        # print ('controller', controller, 'high')
+        thread_maxruntime = controller_type[controller]['controller_type_max_run_time']
+        # print (thread_maxruntime)
+        thread_minresttime = controller_type[controller]['controller_type_min_rest_time']
+        # print (thread_minresttime)
+        event_thread = eventThread(thread_maxruntime, thread_minresttime, gpio)
+        controllers[event_type]= event_thread
+        #print (controllers)
+        event_thread.start()
     elif event_state is STABLE:
-        # turn everything off
+        try:
+            #stop the thread currently bound to event_type
+            thread = controllers[event_type]
+            thread.stop()
+            print(controllers[event_type])
+        except KeyError:
+            pass
         pass
+    else:
+        print('an unexpected event has occurred in event controller')
 
 
 # return mac address of interface
