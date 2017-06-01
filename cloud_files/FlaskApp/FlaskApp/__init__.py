@@ -7,6 +7,7 @@ import platform
 from wtforms import Form, BooleanField, TextField, PasswordField, validators
 from MySQLdb import escape_string as thwart
 from functools import wraps
+from dbFunctions import cleanUpDb, getDbCursor 
 import gc
 import botoupload
 
@@ -84,50 +85,6 @@ def dashBoardPage():
     gc.collect()
     # these environments are rendered on the dashboard.html template.
     return render_template("dashboard.html", results=results)
-
-@app.route('/testjsonresponse/')
-def testJsonResponse():
-    if request.method == 'GET':
-        test = {'name': 'bob', 'age': '20', 'height': '180cm'}
-        return jsonify(**test)
-    else:
-        return 'Method not recognized'
-  
-@app.route('/querydb')
-def querydb():
-    connection, cursor = getDbCursor()
-    args = request.args.to_dict()
-    q= args["query"]
-    cursor.execute(q)
-    r = list(cursor)
-    result_str = ""
-    for result in r:
-        result_str += str(result)
-    return result_str
-
-@app.route('/testdb')
-def testDb():
-    mac = "b8:27:eb:bc:4d:a4"
-    connection, cursor = getDbCursor()
-    query = (
-        "SELECT hub_id, hub_mac, hub_name, hub_profile_id "
-        "FROM hub "
-        "WHERE hub_mac "
-        "LIKE ('{}')".format(mac)
-    )
-    cursor.execute(query)
-    hub = {}
-    for hub_id, hub_mac, hub_name, hub_profile_id in cursor:
-        hub.update({
-            'hub_id': hub_id,
-            'hub_mac': hub_mac,
-            'hub_name': hub_name,
-            'hub_profile_id': hub_profile_id})
-    if not any(hub):
-        hub = {"failed":"1"}
-        print("Unregistered MAC (" + mac + ")\nDevice could not be configured.\n")
-    cleanUpDb(connection,cursor)
-    return jsonify(**hub)
 
 @app.route('/gethub')
 def getHub():
@@ -256,16 +213,6 @@ def viewDevice():
     if hub["hub_owner_id"] != session["id"]:
 
         return redirect(url_for('forbiddenPage'))
-
-
-        # #display the info to the user.
-        # print("sensors = " + str(info["sensor"]))
-        # print("sensor types= " + str(info["sensor_type"]))
-        # print("profile = " + str(info["profile"]))
-        # print("controller = " + str(info["controller"]))
-        # print("controller types = " + str(info["controller_type"]))
-
-
     # get environment name
     environment_name = info["hub"]["hub_name"]
         
@@ -367,19 +314,7 @@ def selectSensor():
     sensors = {}
     for sensor_type_id, sensor_type_name in cursor:
         sensors[sensor_type_id] = sensor_type_name
-    #BELOW CODE will check for already used ports.
-    # #get free ports
-    # query = (
-    #     "SELECT sensor_gpio, sensor_type_id "
-    #     "FROM sensor "
-    #     "WHERE sensor_hub_id = {}".format(hid)
-    # )
-    # cursor.execute(query)
-    # ports = []
-    # for sensor_gpio,sensor_type_id in cursor:
-    #     ports.append(SENSOR_MAPPING[sensor_gpio])
-    
-    # print(ports)
+
     cleanUpDb(connection, cursor)
     gc.collect()
     # return a list of current profiles to the user
@@ -552,12 +487,6 @@ def devicesPage():
 def accessoriesPage():
     return render_template("comingsoon.html")
 
-# currently redirecting to NZ fire service.
-# @app.route('/support/')
-# def accessoriesPage():
-#     return redirect(url_for('comingSoonPage'))
-
-
 ########################################################################################################
 # GET CONFIG !!!!
 ########################################################################################################
@@ -583,15 +512,6 @@ def getconfig():
     #return the config as a JSON object
     #TODO -- set content-type to JSON here.
     return json.dumps(config)
-
-def getDbCursor():
-    connection = mysql.connector.connect(user='iotcc_user',password='158335danish',host='iotcc-db-instance.cqmmjgzwow7o.us-west-2.rds.amazonaws.com',database='microhort')
-    cursor = connection.cursor()
-    return connection, cursor
-    
-def cleanUpDb(connection, cursor):
-    cursor.close()
-    connection.close()
     
 def get_hub(mac,cursor):
     query = (
@@ -919,7 +839,7 @@ def viewPictures():
     return render_template("viewpictures.html", environment_name=environment_name, pictures=results, is_results=str(is_results))
 
 ########################################################################################################
-# DATA LOG ACCESS
+# DATA LOGS
 ########################################################################################################
 @app.route('/submitdatalog', methods=['POST'])
 def dataLog():
@@ -940,7 +860,38 @@ def dataLog():
     connection.commit()
     cleanUpDb(connection,cursor)
 
-    return success
+    return "success"
+
+@app.route('/events')
+@login_required
+@hid_required
+def viewEvents():
+
+    hid = session["hid"]
+    environment_name = session["environment_name"]
+    # query DB for all events with a event_hub_id of hid
+
+    query = (
+        "SELECT event_dtg, event_message "
+        "FROM event "
+        "WHERE event_hub_id = %s"
+    )
+    # #save the file to the database
+    connection, cursor = getDbCursor()
+
+    cursor.execute(query, (hid,))
+
+    results = []
+    for event_dtg, event_message in cursor:
+        results.append((event_dtg, event_message))
+
+    # Currently first LOGGED TO THE DB will be displayed first.
+    # we want most recent.
+
+    results = list(reversed(results))
+    cleanUpDb(connection,cursor)
+
+    return render_template("events.html", results=results, environment_name=environment_name)
 
 
 
