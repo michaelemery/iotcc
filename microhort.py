@@ -291,7 +291,7 @@ def action_controller(event_entry, controller_type, controller, sensor_type):
     global controllers
 
     #getting the appropriate gpio
-    gpio = controller[sensor_type[sensor_type_id]['sensor_type_high_controller_type_id']]['controller_gpio']
+    
     # print ('gpio is', gpio)
 
     if event_state is HIGH:
@@ -309,9 +309,12 @@ def action_controller(event_entry, controller_type, controller, sensor_type):
         # print (thread_maxruntime)
         thread_minresttime = controller_type[controller]['controller_type_min_rest_time']
         # print (thread_minresttime)
+        gpio = controller[sensor_type[sensor_type_id]['sensor_type_high_controller_type_id']]['controller_gpio']
         event_thread = eventThread(thread_maxruntime, thread_minresttime, gpio)
         controllers[event_type]= event_thread
         #print (controllers)
+        print('high controller enabled')
+        print('gpio is', gpio)
         event_thread.start()
     elif event_state is LOW:
         try:
@@ -332,16 +335,20 @@ def action_controller(event_entry, controller_type, controller, sensor_type):
         # print (thread_maxruntime)
         thread_minresttime = controller_type[controller]['controller_type_min_rest_time']
         # print (thread_minresttime)
+        gpio = controller[sensor_type[sensor_type_id]['sensor_type_lowcontroller_type_id']]['controller_gpio']
         event_thread = eventThread(thread_maxruntime, thread_minresttime, gpio)
         controllers[event_type]= event_thread
         #print (controllers)
+        print('low controller enabled')
+        print('gpio is', gpio)
         event_thread.start()
     elif event_state is STABLE:
         try:
             #stop the thread currently bound to event_type
             thread = controllers[event_type]
             thread.stop()
-            print(controllers[event_type])
+            #print(controllers[event_type])
+            print('the controllers are off')
         except KeyError:
             pass
         pass
